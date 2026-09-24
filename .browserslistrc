@@ -1,0 +1,28 @@
+# .browserslistrc
+#
+# Defines the browser support target for SWC (via next.config.js
+# experimental.browsersListForSwc: true).
+#
+# These versions all support natively:
+#   - Optional chaining (?.)
+#   - Nullish coalescing (??)
+#   - Logical assignment (&&=, ||=, ??=)
+#   - async/await (no generator transform needed)
+#   - Promise.allSettled / Promise.any
+#   - String.replaceAll
+#   - globalThis
+#   - Dynamic import()
+#   - CSS custom properties (vars)
+#
+# By listing only these modern versions, SWC skips the polyfill transforms
+# for all of the above — saving ~25–35 KiB of JavaScript per page.
+#
+# If you need to support older browsers (e.g. Samsung Internet < 14,
+# UC Browser, older iOS Safari), widen the targets below and re-measure
+# with Lighthouse.
+
+last 2 Chrome versions
+last 2 Firefox versions
+last 2 Edge versions
+last 2 Safari versions
+last 2 iOS versions

@@ -1,0 +1,612 @@
+.header {
+  --nx-bg: #ffffff;
+  --nx-fg: #0f172a;
+  --nx-border: #e5e7eb;
+  --nx-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+/*
+  Only box-sizing belongs on the universal descendant selector. The
+  previous version also applied `position: sticky; top: 0; z-index: 9999`
+  to every descendant — including the drawer logo <a>/<img> and the
+  close button — which pinned them to the top of their own containers
+  and made them stack on top of each other instead of sitting at
+  opposite ends of the drawer head.
+*/
+.header * {
+  box-sizing: border-box;
+}
+
+.header a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.bar {
+  height: 64px;
+  background: var(--nx-bg);
+  color: var(--nx-fg);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--nx-border);
+  position: relative;
+  z-index: 50;
+}
+
+.logo img {
+  height: 36px;
+  display: block;
+}
+
+.burger {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.nav {
+  display: none;
+}
+
+.navList,
+.submenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navList {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.menuItem {
+  position: relative;
+}
+
+.menuItemHasChildren:hover > .submenu,
+.menuItemHasChildren:focus-within > .submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.navLink,
+.submenuLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-radius: 8px;
+  color: #111827;
+}
+
+.navLink {
+  height: 40px;
+  padding: 0 10px;
+  font-weight: 600;
+}
+
+.submenuLink {
+  width: 100%;
+  padding: 10px 12px;
+  font-weight: 500;
+}
+
+.navLink:hover,
+.submenuLink:hover {
+  background: #f3f4f6;
+}
+
+.submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 230px;
+  background: #fff;
+  border: 1px solid var(--nx-border);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: var(--nx-shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: 0.18s ease;
+  z-index: 100;
+}
+
+.submenu .submenu {
+  top: 0;
+  left: calc(100% + 6px);
+}
+
+.caret {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.menuItemIcon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search {
+  display: none;
+  align-items: center;
+  border: 1px solid var(--nx-border);
+  border-radius: 10px;
+  padding: 0 8px;
+  height: 40px;
+}
+
+.searchInput {
+  border: 0;
+  outline: 0;
+  width: 220px;
+}
+
+.searchBtn {
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f4f6f8;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.cartIcon {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #1f2937;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  transition: all 0.25s ease;
+}
+
+.cartIcon i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cartIcon:hover {
+  color: #0f172a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+.cartBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35);
+  box-sizing: border-box;
+}
+
+.drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 85%;
+  max-width: 360px;
+  background: #fff;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  z-index: 80;
+  border-right: 1px solid var(--nx-border);
+}
+
+.drawerOpen {
+  transform: translateX(0);
+}
+
+.drawerHead {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--nx-border);
+}
+
+.drawerLogo {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.drawerLogo img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+.drawerClose {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f3f4f6;
+  border: 0;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: #111827;
+}
+
+.drawerBody {
+  padding: 12px 16px 24px;
+  overflow: auto;
+}
+
+.mobsearch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mobsearchInput {
+  flex: 1;
+  height: 42px;
+  border: 1px solid var(--nx-border);
+  border-radius: 10px;
+  padding: 0 10px;
+}
+
+.mobsearchBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #f4f6f8;
+  border: 0;
+  cursor: pointer;
+}
+
+.drawerMenu {
+  display: grid;
+  gap: 6px;
+}
+
+.dmItem {
+  border: 1px solid var(--nx-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dmToggle {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  background: #f9fafb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 0;
+  cursor: pointer;
+}
+
+.dmToggleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.dmPanel {
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.dmLink {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #111827;
+  border: 1px solid var(--nx-border);
+  background: #fff;
+}
+
+.dmLink:hover {
+  background: #f3f4f6;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.2s ease;
+  z-index: 70;
+}
+
+.overlayOpen {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (min-width: 1196px) {
+  .bar {
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    padding: 0 24px;
+    height: 72px;
+  }
+
+  .burger {
+    display: none;
+  }
+
+  .nav {
+    display: block;
+  }
+
+  .search {
+    display: flex;
+  }
+
+  .drawer,
+  .overlay {
+    display: none;
+  }
+}
+
+/* =========================================================
+   Animated World Cup Menu Item
+   Safe for CSS Modules
+   ========================================================= */
+
+.worldCupMenuItem {
+  position: relative;
+}
+
+.worldCupMenuLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: #ffffff !important;
+  font-weight: 800;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.45), transparent 26%),
+    linear-gradient(120deg, #00a859, #0057d9, #ed2026, #00a859);
+  background-size: 260% 260%;
+  box-shadow:
+    0 8px 22px rgba(0, 87, 217, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  animation: worldCupBgMove 4s ease infinite;
+}
+
+.worldCupMenuLink::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 46%;
+  transform: translateX(-150%) skewX(-22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.48),
+    transparent
+  );
+  animation: worldCupShine 2.8s ease-in-out infinite;
+  z-index: -1;
+}
+
+.worldCupMenuLink::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  border: 1px dashed rgba(255, 255, 255, 0.36);
+  pointer-events: none;
+}
+
+.worldCupIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transform-origin: center;
+  animation: worldCupBallBounce 1.35s ease-in-out infinite;
+}
+
+.worldCupText {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.worldCupSpark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0.95;
+  animation: worldCupSparkPulse 1.55s ease-in-out infinite;
+}
+
+.worldCupMenuLink:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 10px 26px rgba(0, 87, 217, 0.3),
+    inset 0 0 0 1px rgba(233, 42, 42, 0.28);
+}
+
+@keyframes worldCupBgMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes worldCupShine {
+  0% {
+    transform: translateX(-150%) skewX(-22deg);
+  }
+
+  48%,
+  100% {
+    transform: translateX(260%) skewX(-22deg);
+  }
+}
+
+@keyframes worldCupBallBounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  35% {
+    transform: translateY(-3px) rotate(-14deg) scale(1.08);
+  }
+
+  70% {
+    transform: translateY(1px) rotate(14deg) scale(1);
+  }
+}
+
+@keyframes worldCupSparkPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.22) rotate(18deg);
+  }
+}
+
+/* Keep submenu version compact if World Cup ever appears inside dropdown */
+.submenu .worldCupMenuLink {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 9px 12px;
+}
+
+/* Mobile drawer is a separate component, but this keeps the class safe
+   if the same DesktopMenu styles are reused anywhere smaller. */
+@media (max-width: 768px) {
+  .worldCupMenuLink {
+    width: fit-content;
+    padding: 8px 13px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .worldCupMenuLink,
+  .worldCupMenuLink::before,
+  .worldCupIcon,
+  .worldCupSpark {
+    animation: none;
+  }
+
+  .worldCupMenuLink:hover {
+    transform: none;
+  }
+}
+
+/* Fix World Cup menu hover color override */
+.worldCupMenuLink:hover,
+.worldCupMenuLink:focus,
+.worldCupMenuLink:focus-visible {
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.45), transparent 26%),
+    linear-gradient(120deg, #00a859, #0057d9, #ed2026, #00a859) !important;
+  background-size: 260% 260% !important;
+  box-shadow:
+    0 10px 26px rgba(0, 87, 217, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+.worldCupMenuLink:hover span,
+.worldCupMenuLink:focus span,
+.worldCupMenuLink:focus-visible span {
+  color: #ffffff !important;
+}
+
+/* Optional: make hover slightly darker instead of white */
+.worldCupMenuLink:hover {
+  filter: brightness(0.96) saturate(1.08);
+}

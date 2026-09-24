@@ -1,0 +1,93 @@
+.layout {
+  width: min(1080px, calc(100% - 40px));
+  margin: 44px auto 96px;
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.quickContact,
+.formSection {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 28px;
+  background: #ffffff;
+}
+
+.quickContact h2,
+.formSection h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.quickContact > p,
+.formIntro {
+  margin: 0 0 20px;
+  color: #4b5563;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+.quickContactActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.callBtn,
+.whatsappBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.callBtn {
+  background: #fdece0;
+  color: #e95b08;
+}
+
+.callBtn:hover {
+  background: #fbdcc4;
+}
+
+.whatsappBtn {
+  background: #25d366;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(37, 211, 102, 0.25);
+}
+
+.whatsappBtn:hover {
+  background: #20bd5a;
+}
+
+.showroomHeading {
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .layout {
+    width: calc(100% - 28px);
+    margin-top: 30px;
+  }
+
+  .quickContact,
+  .formSection {
+    padding: 20px;
+  }
+}

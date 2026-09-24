@@ -1,0 +1,932 @@
+.pageRoot {
+  background: #ffffff;
+  color: #111827;
+}
+
+.container {
+  width: min(1320px, calc(100% - 24px));
+  margin: 0 auto;
+}
+
+.hero {
+  padding: 10px 0 2px;
+  background: #ffffff;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.heroLeft,
+.heroRightTop,
+.heroSmall {
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f3f4f6;
+  position: relative;
+}
+
+.heroLeft {
+  aspect-ratio: 654 / 580;
+}
+
+.heroRightTop {
+  aspect-ratio: 654 / 280;
+}
+
+.heroSmall {
+  aspect-ratio: 320 / 280;
+}
+
+.heroRight {
+  display: grid;
+  gap: 12px;
+}
+
+.heroRightBottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.galleryLink {
+  display: block;
+  height: 100%;
+}
+
+.fitImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.categoryRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.categoryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 10px;
+  color: #111827;
+  text-decoration: none;
+  
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.categoryCard:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.categoryCard:focus-visible,
+.topSliderControls button:focus-visible,
+.floatingArrow:focus-visible,
+.filterTab:focus-visible,
+.galleryLinkButton:focus-visible,
+.litePlayButton:focus-visible {
+  outline: 3px solid rgba(0, 164, 220, 0.28);
+  outline-offset: 3px;
+}
+
+.categoryIcon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.categoryName {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Homepage media area: inserted after categories and before product sections */
+/* -------------------------------------------------------------------------- */
+
+.homeMediaArea {
+  padding: 8px 0 8px;
+  background: #fdfdfd;
+
+}
+
+.featuredVideoPanel,
+.mediaGalleryPanel {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e7ebee;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.05);
+}
+
+
+
+.mediaGalleryPanel {
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.mediaHeadingRow,
+.galleryTitleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+
+
+.galleryTitleRow {
+  padding: 18px 2px 14px;
+}
+
+.mediaHeadingRow h2,
+.galleryTitleRow h2 {
+  margin: 3px 0 0;
+  color: #111827;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: -0.025em;
+}
+
+.mediaHeadingRow p {
+  max-width: 720px;
+  margin: 9px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+.eyebrow {
+  display: inline-flex;
+  color: #0785a5;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.topSliderControls {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding-top: 5px;
+}
+
+.topSliderControls button,
+.floatingArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  color: #0f172a;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #d9e0e5;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transition: color 0.18s ease, background 0.18s ease,
+    border-color 0.18s ease, transform 0.18s ease;
+}
+
+.topSliderControls button:hover,
+.floatingArrow:hover {
+  color: #ffffff;
+  background: #079bc3;
+  border-color: #079bc3;
+  transform: translateY(-1px);
+}
+
+.featuredViewport,
+.galleryViewport {
+  position: relative;
+  overflow: hidden;
+}
+
+/*
+ * Track scroll behavior
+ * ----------------------
+ * touch-action: pan-x + -webkit-overflow-scrolling: touch ensure the
+ * browser treats this as a native horizontally-scrollable region on
+ * touch devices, so it doesn't intercept/ambiguous-gesture a tap that's
+ * meant for the embedded YouTube iframe underneath.
+ *
+ * scroll-snap-type is set here as the desktop/base behavior. It is
+ * explicitly disabled below under `(hover: none) and (pointer: coarse)`
+ * (i.e. touch devices) because snap-scrolling combined with a tap on a
+ * cross-origin iframe is what was swallowing the tap-to-play gesture on
+ * mobile — the browser's snap/scroll-settling logic consumes the touch
+ * sequence before it reaches the iframe as a click.
+ */
+.featuredTrack,
+.galleryTrack {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+}
+
+.featuredTrack::-webkit-scrollbar,
+.galleryTrack::-webkit-scrollbar,
+.filterTabs::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Featured carousel sizing
+ * ------------------------
+ * How many cards are visible at once is controlled entirely by
+ * .featuredVideoCard's flex-basis below (via the clamp()'s middle,
+ * viewport-relative value) — NOT by this track. To show more cards
+ * at a glance, lower that vw value (e.g. 20vw ~= 5 cards, 33vw ~= 3
+ * cards on a ~1320px container). The padding-inline here just keeps
+ * the first/last card visually centered instead of flush to the edge;
+ * its "520px" reference should roughly track the card's real-world
+ * average width so centering still lines up.
+ */
+.featuredTrack {
+  gap: 5px;
+  padding: 14px max(24px, calc((100% - 300px) / 2)) 32px;
+}
+
+.featuredVideoCard {
+  flex: 0 0 clamp(230px, 19vw, 300px);
+  min-width: 0;
+  overflow: hidden;
+  scroll-snap-align: center;
+  background: #ffffff;
+  border: 1px solid #e3e8ec;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  opacity: 0.55;
+  transform: scale(0.82);
+  transform-origin: center;
+  transition: opacity 0.28s ease, transform 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+/* The centered/active card "pops" larger than its neighbors — this is
+   what creates the hero-card look instead of a flat, uniform row. */
+.featuredVideoCard[data-active="true"] {
+  z-index: 2;
+  opacity: 1;
+  transform: scale(1.08);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+}
+
+.videoFrame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #0f172a;
+  aspect-ratio: 16 / 9;
+}
+
+.videoFrame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Lite YouTube: same-origin thumbnail + play button (no iframe until tap)   */
+/* -------------------------------------------------------------------------- */
+
+.litePlayButton {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  cursor: pointer;
+  background: #0f172a;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.liteThumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+}
+
+.liteThumbFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.litePlayIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition: background 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+
+.litePlayButton:hover .litePlayIcon,
+.litePlayButton:focus-visible .litePlayIcon {
+  background: #079bc3;
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.featuredVideoBody {
+  padding: 15px 16px 17px;
+}
+
+.featuredVideoMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: #75808f;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.featuredVideoMeta span {
+  color: #0688aa;
+}
+
+.featuredVideoTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.featuredVideoTitleRow h3,
+.mediaVideoBody h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #172033;
+  font-weight: 750;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+}
+
+.featuredVideoTitleRow h3 {
+  font-size: 16px;
+  -webkit-line-clamp: 2;
+}
+
+.cardArrow {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #111827;
+  border-radius: 999px;
+}
+
+.carouselDots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 20px;
+}
+
+.carouselDots span {
+  width: 7px;
+  height: 7px;
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.carouselDots span[data-active="true"] {
+  width: 24px;
+  background: #079bc3;
+}
+
+.galleryToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.filterTabs {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.filterTab {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 12px;
+  color: #111827;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  background: #ffffff;
+  margin-bottom: 14px;
+  border: 1px solid #d8dee4;
+  border-radius: 9px;
+  transition: color 0.18s ease, background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.filterTab span {
+  color: #111827;
+}
+
+.filterTab:hover,
+.filterTab[aria-selected="true"] {
+  color: #ffffff;
+  background: #111827;
+  border-color: #111827;
+}
+
+.filterTab[aria-selected="true"] span {
+  color: #ffffff;
+}
+
+.galleryLinkButton {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 13px;
+  color: #087d9d;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  background: #ffffff;
+  border: 1px solid #079bc3;
+  border-radius: 999px;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+.galleryLinkButton:hover {
+  color: #ffffff;
+  background: #079bc3;
+}
+
+.galleryMark {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.playIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: #ffffff;
+  background: #06baf1;
+  border-radius: 999px;
+}
+
+.galleryCarouselShell {
+  position: relative;
+}
+
+.galleryTrack {
+  gap: 10px;
+  padding: 0 2px 8px;
+  scroll-padding-inline: 2px;
+}
+
+.mediaVideoCard {
+  flex: 0 0 clamp(240px, 21vw, 300px);
+  min-width: 0;
+  overflow: hidden;
+  scroll-snap-align: start;
+  background: #ffffff;
+  border: 1px solid #e3e8ec;
+  border-radius: 11px;
+  box-shadow: 0 7px 18px rgba(15, 23, 42, 0.05);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mediaVideoCard:hover,
+.mediaVideoCard[data-active="true"] {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(15, 23, 42, 0.1);
+}
+
+.mediaVideoCard[hidden] {
+  display: none;
+}
+
+.mediaVideoBody {
+  padding: 10px 11px 12px;
+}
+
+.mediaCategoryBadge {
+  display: inline-flex;
+  margin-bottom: 7px;
+  color: #0885a5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mediaVideoBody h3 {
+  min-height: 40px;
+  font-size: 13px;
+  -webkit-line-clamp: 2;
+}
+
+.mediaVideoBody time {
+  display: block;
+  margin-top: 6px;
+  color: #7b8491;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.floatingArrow {
+  position: absolute;
+  top: 42%;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
+  color: #ffffff;
+  background: #1584a0;
+  border-color: #1584a0;
+  transform: translateY(-50%);
+}
+
+.floatingArrow:hover {
+  transform: translateY(-50%) scale(1.04);
+}
+
+.floatingArrowLeft {
+  left: 6px;
+}
+
+.floatingArrowRight {
+  right: 6px;
+}
+
+/* Existing product sections */
+.section {
+  padding: 24px 0;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.sectionHeader h2 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: clamp(26px, 4vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.sectionHeader p {
+  max-width: 760px;
+  margin: 0;
+  color: #374151;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.footerTop {
+  padding: 28px 0 48px;
+}
+
+.footerContent {
+  color: #374151;
+  line-height: 1.8;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1199px) {
+  .productGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .featuredTrack {
+    padding-inline: max(20px, calc((100% - 260px) / 2));
+  }
+
+  .featuredVideoCard {
+    flex-basis: clamp(210px, 26vw, 280px);
+  }
+
+  .mediaVideoCard {
+    flex-basis: clamp(240px, 29vw, 290px);
+  }
+}
+
+@media (max-width: 991px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* .homeMediaArea {
+    padding-top: 10px;
+  } */
+
+  .featuredTrack {
+    padding-inline: max(18px, calc((100% - 46vw) / 2));
+  }
+
+  .featuredVideoCard {
+    flex-basis: 46vw;
+  }
+
+  .mediaVideoCard {
+    flex-basis: 38vw;
+  }
+
+  .galleryToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .galleryLinkButton {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 700px) {
+  .mediaHeadingRow {
+    padding-inline: 16px;
+  }
+
+  .mediaHeadingRow p {
+    display: none;
+  }
+
+  .topSliderControls button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .featuredTrack {
+    gap: 8px;
+    padding: 8px max(12px, calc((100% - 86vw) / 2)) 20px;
+  }
+
+  .featuredVideoCard {
+    flex-basis: 86vw;
+    border-radius: 13px;
+    opacity: 0.78;
+    transform: scale(0.96);
+  }
+
+  .featuredVideoCard[data-active="true"] {
+    transform: scale(1);
+  }
+
+  .mediaGalleryPanel {
+    padding: 14px 10px;
+    border-radius: 14px;
+  }
+
+  .galleryTitleRow {
+    padding-inline: 2px;
+  }
+
+  .mediaVideoCard {
+    flex-basis: 73vw;
+  }
+
+  .floatingArrow {
+    top: 43%;
+    width: 34px;
+    height: 34px;
+  }
+
+  .floatingArrowLeft {
+    left: 2px;
+  }
+
+  .floatingArrowRight {
+    right: 2px;
+  }
+
+  .litePlayIcon {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 575px) {
+  .container {
+    width: min(100%, calc(100% - 16px));
+  }
+
+  .hero {
+    padding-top: 14px;
+  }
+
+  .categoryRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* .homeMediaArea {
+    padding-bottom: 16px;
+  } */
+
+  .featuredVideoPanel {
+    padding-top: 18px;
+    border-radius: 14px;
+  }
+
+  .mediaHeadingRow {
+    gap: 10px;
+  }
+
+  .mediaHeadingRow h2,
+  .galleryTitleRow h2 {
+    font-size: 23px;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+  }
+
+  .topSliderControls {
+    gap: 5px;
+  }
+
+  .featuredVideoBody {
+    padding: 12px 13px 14px;
+  }
+
+  .featuredVideoTitleRow h3 {
+    font-size: 14px;
+  }
+
+  .filterTab {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .galleryLinkButton {
+    align-self: stretch;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .section {
+    padding: 32px 0;
+  }
+}
+
+@media (max-width: 675px) {
+  .footerContent,
+  .footerContent h1,
+  .footerContent p,
+  .footerContent ul,
+  .footerContent li {
+    text-align: center;
+  }
+}
+
+/*
+ * Touch-device fix: disable scroll-snap on the video carousels.
+ *
+ * On iOS Safari / Chrome mobile, a tap that lands inside a
+ * snap-scrolling container — while that container also holds a
+ * cross-origin YouTube iframe — gets consumed by the browser's
+ * snap/scroll-settling logic instead of being forwarded to the iframe
+ * as a click. This is what was blocking video playback on mobile only
+ * (desktop mouse clicks have no such gesture ambiguity). Scroll-snap
+ * is kept for pointer devices (desktop) where this conflict doesn't
+ * occur, so the "pop" card-centering effect is preserved there.
+ *
+ * With the lite-thumbnail approach the cross-origin iframe is no longer
+ * present until after the user has already successfully tapped our own
+ * button, so the snap conflict is largely moot — but we still disable
+ * snap on coarse pointers for consistent native swipe feel.
+ */
+@media (hover: none) and (pointer: coarse) {
+  .featuredTrack,
+  .galleryTrack {
+    scroll-snap-type: none !important;
+  }
+
+  .featuredVideoCard,
+  .mediaVideoCard {
+    scroll-snap-align: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featuredTrack,
+  .galleryTrack,
+  .filterTabs {
+    scroll-behavior: auto;
+  }
+
+  .featuredVideoCard,
+  .mediaVideoCard,
+  .topSliderControls button,
+  .floatingArrow,
+  .filterTab,
+  .galleryLinkButton,
+  .categoryCard,
+  .litePlayIcon {
+    transition: none;
+  }
+}

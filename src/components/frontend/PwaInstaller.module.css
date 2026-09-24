@@ -1,0 +1,89 @@
+/* PwaInstaller.module.css
+   Fixed to the bottom-LEFT so it never overlaps the bottom-right
+   FloatingWhatsApp FAB. */
+
+.wrap {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  /* Respect iOS safe-area so it isn't hidden behind the home indicator. */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.installBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #111827;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  box-shadow: 0 6px 20px rgba(17, 24, 39, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.installBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.34);
+}
+
+.installBtn:active {
+  transform: translateY(0);
+}
+
+.installBtn:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+}
+
+.iosHint {
+  position: relative;
+  max-width: 260px;
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 32px 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.dismiss {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  color: #6b7280;
+  padding: 4px;
+}
+
+.dismiss:hover {
+  color: #111827;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .installBtn {
+    transition: none;
+  }
+}

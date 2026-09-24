@@ -1,0 +1,35 @@
+/* ──────────────────────────────────────────────────────────────────────
+   Append these rules to: src/components/frontend/slug/CategoryPage.module.css
+   They make <details>/<summary> behave like the previous JS accordion.
+   The existing .accordion / .accordionItem / .accordionButton /
+   .accordionBody rules already mostly do the right thing; these tweaks
+   handle the bits that <summary> brings (default marker, rotation,
+   focus state).
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Remove the default ▶ marker on every browser */
+.accordionButton::-webkit-details-marker { display: none; }
+.accordionButton { list-style: none; }
+
+/* Our custom +/− indicator. We rotate `+` to look like `×` when open,
+   which reads visually as "minus" without needing two glyphs. */
+.accordionIcon {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+.accordionItem[open] .accordionIcon {
+  transform: rotate(45deg);
+}
+
+/* Subtle hover affordance */
+.accordionButton:hover {
+  background: #f3f4f6;
+}
+
+/* Visible focus ring for keyboard users */
+.accordionButton:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}

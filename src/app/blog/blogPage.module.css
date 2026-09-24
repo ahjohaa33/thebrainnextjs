@@ -1,0 +1,288 @@
+.container {
+  width: min(1200px, calc(100% - 24px));
+  margin: 0 auto;
+}
+
+.breadcrumb {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-image: url("/frontend/assets/img/bg.jpg");
+  padding: 40px 0;
+}
+
+.bread {
+  display: flex;
+  justify-content: center;
+}
+
+.bread ul {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.bread li {
+  margin: 0;
+  font-size: 16px;
+  color: #01132d;
+  line-height: 26px;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.bread a {
+  color: #01132d;
+  text-decoration: none;
+}
+
+.blogmain {
+  padding: 50px 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+
+.mainPosts {
+  min-width: 0;
+}
+
+.sidebarCol {
+  min-width: 0;
+}
+
+.postloop {
+  margin-bottom: 42px;
+  background: #ffffff;
+}
+
+.loopimg {
+  text-align: center;
+}
+
+.thumbnail {
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  object-fit: cover;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 4px;
+  background: #fff;
+}
+
+.loopContent {
+  margin: 18px 0 56px;
+}
+
+.loopContent p {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #01132d;
+  line-height: 1.65;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.looptitile {
+  font-size: 24px;
+  line-height: 30px;
+  margin: 12px 0 8px;
+  color: #01132d;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.loopContent a {
+  text-decoration: none;
+}
+
+.tagcat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  color: #01132d;
+  border: 1px solid #d8e0e8;
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+  font-family: "Trebuchet MS", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.tagcat:hover,
+.activeTag {
+  background: #198754;
+  border-color: #198754;
+  color: #ffffff;
+}
+
+.dateandtime {
+  display: inline-block;
+  margin: 4px 0 12px;
+  color: #5b6778;
+  font-size: 14px;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.readmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  color: #198754;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.readmore:hover {
+  text-decoration: underline;
+}
+
+.noPost {
+  text-align: center;
+  padding: 40px 15px;
+  color: #01132d;
+  font-size: 18px;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.sidebarblog {
+  position: sticky;
+  top: 20px;
+}
+
+.sidebar {
+  padding: 35px 20px;
+  margin-bottom: 24px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(1, 19, 45, 0.08);
+}
+
+.sidebartitle {
+  margin: 0 0 18px;
+  text-align: left;
+  font-size: 22px;
+  line-height: 28px;
+  color: #01132d;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.formControl {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #d8e0e8;
+  border-radius: 6px;
+  color: #01132d;
+  font-size: 16px;
+  font-family: "Trebuchet MS", sans-serif;
+  outline: none;
+}
+
+.formControl:focus {
+  border-color: #198754;
+}
+
+.searchButton {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 6px;
+  background: #198754;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.searchButton:hover {
+  background: #146c43;
+}
+
+.categoryWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 20px 0 0;
+}
+
+.pageLink,
+.pageDots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #d8e0e8;
+  border-radius: 6px;
+  color: #01132d;
+  background: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.pageLink:hover,
+.activePage {
+  background: #198754;
+  border-color: #198754;
+  color: #ffffff;
+}
+
+.pageDots {
+  border-color: transparent;
+  background: transparent;
+}
+
+@media (max-width: 991px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebarblog {
+    position: static;
+  }
+}
+
+@media (max-width: 575px) {
+  .breadcrumb {
+    padding: 28px 0;
+  }
+
+  .blogmain {
+    padding: 34px 0;
+  }
+
+  .looptitile {
+    font-size: 21px;
+    line-height: 28px;
+  }
+
+  .loopContent {
+    margin-bottom: 38px;
+  }
+
+  .sidebar {
+    padding: 26px 16px;
+  }
+}

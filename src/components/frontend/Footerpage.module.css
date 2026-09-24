@@ -1,0 +1,445 @@
+.footer {
+  width: 100%;
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(255, 90, 31, 0.08),
+      transparent 28%
+    ),
+    #050505;
+  color: #ffffff;
+  border-top: 1px solid #1c1c1c;
+  overflow: hidden;
+}
+
+.footer,
+.footer * {
+  box-sizing: border-box;
+}
+
+.container {
+  width: min(100% - 40px, 1320px);
+  margin: 0 auto;
+}
+
+/* ========================================
+   MAIN FOOTER
+======================================== */
+
+.topGrid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr 1fr 1.45fr;
+  gap: clamp(32px, 4vw, 72px);
+  padding: 72px 0 62px;
+}
+
+/* ========================================
+   BRAND
+======================================== */
+
+.brandColumn {
+  min-width: 0;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: 64px;
+  max-width: 240px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.logoLink:hover .logo {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.brandText {
+  max-width: 340px;
+  margin: 24px 0 28px;
+  color: #909090;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+/* ========================================
+   SOCIAL
+======================================== */
+
+.socialList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.socialButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #242424;
+  border-radius: 50%;
+  background: #111111;
+  color: #b5b5b5;
+  text-decoration: none;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.socialButton:hover {
+  color: #ffffff;
+  background: #ff5a1f;
+  border-color: #ff5a1f;
+  transform: translateY(-3px);
+}
+
+/* ========================================
+   COLUMNS
+======================================== */
+
+.linksColumn,
+.contactColumn {
+  min-width: 0;
+}
+
+.columnTitle {
+  position: relative;
+  margin: 0 0 26px;
+  padding-bottom: 14px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.columnTitle::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 30px;
+  height: 2px;
+  border-radius: 999px;
+  background: #ff5a1f;
+}
+
+/* ========================================
+   LINKS
+======================================== */
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.linkList li {
+  margin: 0;
+  padding: 0;
+}
+
+.footerLink {
+  display: inline-flex;
+  align-items: center;
+  color: #8e8e8e;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.55;
+  text-decoration: none;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.footerLink:hover {
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+/* ========================================
+   CONTACT
+======================================== */
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  min-width: 0;
+}
+
+.contactIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-top: 1px;
+  border: 1px solid rgba(255, 90, 31, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 90, 31, 0.08);
+  color: #ff5a1f;
+}
+
+.contactItem p {
+  min-width: 0;
+  margin: 0;
+  padding-top: 5px;
+  color: #909090;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.contactLink {
+  min-width: 0;
+  padding-top: 6px;
+  color: #b1b1b1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: color 180ms ease;
+}
+
+.contactLink:hover {
+  color: #ff5a1f;
+}
+
+/* ========================================
+   BOTTOM BAR
+======================================== */
+
+.bottomBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  min-height: 72px;
+  padding: 20px 0;
+  border-top: 1px solid #1a1a1a;
+}
+
+.copyright {
+  min-width: 0;
+  color: #686868;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.copyright p {
+  margin: 0;
+}
+
+.copyright div,
+.copyright div p {
+  margin: 0;
+}
+
+.copyright a {
+  color: #a5a5a5;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.copyright a:hover {
+  color: #ff5a1f;
+}
+
+.bottomLinks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 24px;
+}
+
+.bottomLink {
+  color: #686868;
+  font-size: 12px;
+}
+
+.bottomLink:hover {
+  color: #ffffff;
+  transform: none;
+}
+
+/* ========================================
+   LARGE TABLET
+======================================== */
+
+@media (max-width: 1100px) {
+  .topGrid {
+    grid-template-columns: 1.5fr 1fr 1fr;
+  }
+
+  .contactColumn {
+    grid-column: 1 / -1;
+  }
+
+  .contactList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+/* ========================================
+   TABLET
+======================================== */
+
+@media (max-width: 850px) {
+  .container {
+    width: min(100% - 32px, 1320px);
+  }
+
+  .topGrid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 36px 28px;
+    padding: 56px 0 50px;
+  }
+
+  .logo {
+    height: 56px;
+  }
+
+  .brandText {
+    font-size: 13px;
+  }
+
+  .contactList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 700px) {
+  .topGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 42px 28px;
+    padding: 48px 0 44px;
+  }
+
+  .brandColumn {
+    grid-column: 1 / -1;
+  }
+
+  .brandText {
+    max-width: 480px;
+  }
+
+  .contactColumn {
+    grid-column: 1 / -1;
+  }
+
+  .contactList {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bottomBar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bottomLinks {
+    justify-content: flex-start;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+======================================== */
+
+@media (max-width: 520px) {
+  .container {
+    width: min(100% - 28px, 1320px);
+  }
+
+  .topGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 38px;
+    padding: 44px 0 40px;
+  }
+
+  .logo {
+    height: 50px;
+    max-width: 210px;
+  }
+
+  .brandText {
+    margin: 20px 0 24px;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+
+  .columnTitle {
+    margin-bottom: 20px;
+  }
+
+  .contactList {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bottomBar {
+    min-height: auto;
+    padding: 22px 0 26px;
+  }
+
+  .bottomLinks {
+    gap: 16px;
+  }
+}
+
+/* ========================================
+   EXTRA SMALL
+======================================== */
+
+@media (max-width: 360px) {
+  .container {
+    width: min(100% - 24px, 1320px);
+  }
+
+  .socialButton {
+    width: 38px;
+    height: 38px;
+  }
+
+  .bottomLinks {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
