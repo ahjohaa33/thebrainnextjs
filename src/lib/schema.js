@@ -18,6 +18,7 @@
  */
 
 import { stripMeta, siteUrl, SITE_URL, SITE_NAME } from "./seo";
+import { SALES_WHATSAPP_E164 } from "@/lib/config";
 
 const truthy = (v) => v !== undefined && v !== null && v !== "";
 
