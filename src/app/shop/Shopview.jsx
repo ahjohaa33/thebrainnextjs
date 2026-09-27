@@ -48,6 +48,7 @@ export default function ShopView({ initialData = null }) {
   }, [searchParams]);
 
   const [filters, setFilters] = useState(initialParams);
+  const [searchInput, setSearchInput] = useState(initialParams.query);
 
   const [priceInputs, setPriceInputs] = useState({
     minPrice: initialParams.minPrice || 10,
@@ -114,6 +115,7 @@ export default function ShopView({ initialData = null }) {
     };
 
     setFilters(nextFilters);
+    setSearchInput('');
 
     setPriceInputs({
       minPrice: 10,
@@ -123,7 +125,11 @@ export default function ShopView({ initialData = null }) {
     updateUrl(nextFilters);
   }
 
+  const requestSequence = useRef(0);
+
   async function fetchShopData(activeFilters) {
+    const requestId = ++requestSequence.current;
+
     setLoading(true);
     setMessage(null);
 
@@ -138,6 +144,10 @@ export default function ShopView({ initialData = null }) {
 
       const result = await apiRequest(`/shop?${params.toString()}`);
 
+      // A quick sequence of filter/search changes can leave multiple requests
+      // in flight. Only the newest response is allowed to update the grid.
+      if (requestId !== requestSequence.current) return;
+
       setProducts(result.products?.data || []);
       setBrands(result.brands || []);
       setCategories(result.categories || []);
@@ -149,12 +159,16 @@ export default function ShopView({ initialData = null }) {
         total: result.products?.total || 0,
       });
     } catch (error) {
+      if (requestId !== requestSequence.current) return;
+
       setMessage({
         type: 'error',
         text: error.message || 'Something went wrong while loading products.',
       });
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -190,6 +204,7 @@ export default function ShopView({ initialData = null }) {
 
   useEffect(() => {
     setFilters(initialParams);
+    setSearchInput(initialParams.query);
 
     setPriceInputs({
       minPrice: initialParams.minPrice || 10,
@@ -244,18 +259,13 @@ export default function ShopView({ initialData = null }) {
                     <input
                       className={styles.input}
                       type="search"
-                      value={filters.query}
+                      value={searchInput}
                       placeholder="Search by name or tags"
-                      onChange={(event) =>
-                        setFilters((current) => ({
-                          ...current,
-                          query: event.target.value,
-                        }))
-                      }
+                      onChange={(event) => setSearchInput(event.target.value)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') {
                           applyFilters({
-                            query: event.currentTarget.value,
+                            query: searchInput.trim(),
                           });
                         }
                       }}
@@ -266,7 +276,7 @@ export default function ShopView({ initialData = null }) {
                       className={styles.button}
                       onClick={() =>
                         applyFilters({
-                          query: filters.query,
+                          query: searchInput.trim(),
                         })
                       }
                     >
@@ -501,7 +511,7 @@ export default function ShopView({ initialData = null }) {
                     const productSlug = product.slug || product.url || '';
                     const productUrl = productSlug ? `/${productSlug}` : '#';
 
-                    const price = product.discount_price || product.unit_price;
+                   const price = Number(product.offer_price || 0);
 
                     return (
                       <article className={styles.productCard} key={product.id}>

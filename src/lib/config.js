@@ -29,7 +29,7 @@ export function absoluteUrl(path = "", version) {
  * SALES_WHATSAPP_E164 is the display form (with `+`); SALES_WHATSAPP_DIGITS
  * is what `wa.me/<number>` expects — digits only, no `+`, no spaces.
  */
-export const SALES_WHATSAPP_E164 = "+8801856111313";
+export const SALES_WHATSAPP_E164 = "+8801827400100";
 export const SALES_WHATSAPP_DIGITS = SALES_WHATSAPP_E164.replace(/\D/g, "");
 
 export function buildWhatsAppUrl(message = "") {

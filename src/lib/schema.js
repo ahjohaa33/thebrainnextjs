@@ -48,7 +48,7 @@ export function buildElectronicsStoreSchema() {
     image: `${SITE_URL}/favicon.ico`,
     description:
       "Ponnobd Electronics is an electronics shop in Bangladesh offering LED TVs, Smart TVs, ACs, home appliances, kitchen appliances, smartboards and electronics products with delivery support across Bangladesh.",
-    telephone: "+8801856-111313",
+    telephone: SALES_WHATSAPP_E164,
     priceRange: "BDT",
     currenciesAccepted: "BDT",
     paymentAccepted: [

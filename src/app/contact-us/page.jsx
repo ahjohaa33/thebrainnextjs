@@ -13,7 +13,7 @@ import { getFooterData } from "@/lib/footer-data";
 export const metadata = buildMetadata({
   title: `Contact Us | ${SITE_NAME}`,
   description:
-    "Get in touch with Ponnobd Electronics — call or WhatsApp our support team, or send us a message. Find our official Pentanik showroom addresses here.",
+    "Get in touch with TheBrainbd Lifestyle — call or WhatsApp our support team, or send us a message. Find our official Pentanik showroom addresses here.",
   path: "/contact-us",
 });
 

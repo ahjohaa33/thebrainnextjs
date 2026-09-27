@@ -397,11 +397,7 @@ export default async function Footer() {
                   </li>
                 ))}
 
-              <li>
-                <FooterLink href={privacyUrl}>
-                  {privacyPolicy.label || "Privacy Policy"}
-                </FooterLink>
-              </li>
+
             </ul>
           </div>
 

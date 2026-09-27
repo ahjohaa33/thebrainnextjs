@@ -5,7 +5,7 @@
 .hero {
   position: relative;
   min-height: 200px;
-  background: radial-gradient(circle at 50% 0%, #5126b9 0%, #2f1684 47%, #24106d 100%);
+  background: #000000;
   color: #ffffff;
   border-bottom-left-radius: 50% 18px;
   border-bottom-right-radius: 50% 18px;

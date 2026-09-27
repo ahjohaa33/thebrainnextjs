@@ -602,8 +602,7 @@ export default function CheckoutClient() {
                 <h5 className={styles.paymentTitle}>ক্যাশ অন ডেলিভারি</h5>
                 <p className={`${styles.paymentNote} kalpurush`}>
                   ঢাকার মধ্যে পণ্য বুঝে পাওয়ার পর ক্যাশ টাকার মাধ্যমে পে করতে
-                  হবে। পাঠাও বা ( Uber ) ভাড়া অনুযায়ী ডেলিভারি চার্জ প্রযোজ্য হবে। ঢাকার বাইরে কুরিয়ারের মাধ্যমে পণ্য নিতে হলে পণ্যের
-                  মূল্যের ৫%-১০% বিকাশ/রকেটের মাধ্যমে অগ্রীম প্রদান করতে হবে।
+                  হবে। 
                 </p>
 
                 <p className={styles.privacyNote}>

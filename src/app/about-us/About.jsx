@@ -5,8 +5,8 @@ import "./aboutPage.css";
 
 const ABOUT_API = "/api/about";
 
-const FALLBACK_IMAGE = "https://backend.ponnobd.com/frontend/assets/IMG_5864.JPG";
-const BACKEND_BASE_URL = "https://backend.ponnobd.com";
+const FALLBACK_IMAGE = "https://backend.thebrainbd.com/frontend/assets/IMG_5864.JPG";
+const BACKEND_BASE_URL = "https://backend.thebrainbd.com";
 
 function decodeHtml(html = "") {
   if (typeof window === "undefined") {
@@ -64,9 +64,9 @@ function getSignatureLines(text = "") {
   if (index === -1) {
     return [
       "Warm regards,",
-      "Md Raquibul Islam (Rakib)",
-      "Founder & CEO, Ponnobd Electronics",
-      "Local Vice President of JCI Dhaka Pioneer",
+      "MD Amran Hossain",
+      "Founder & CEO, The Brain bd lifestyle",
+      
     ];
   }
 
@@ -165,7 +165,7 @@ export default function About() {
     const lead =
      
       allSentences.slice(0, 3).join(" ") ||
-      "I am Raquibul Islam, a passionate and forward-thinking entrepreneur from Bangladesh.";
+      "I am MD. Amran Hossain, a passionate and forward-thinking entrepreneur from Bangladesh.";
 
     const tabPanel =
       paragraphs[1] ||
@@ -202,7 +202,7 @@ export default function About() {
 
       sectionSubtitle:
         about?.about_description ||
-        "A message from the leadership of Ponnobd Electronics and Pentanik IT.",
+        "A message from the leadership of The Brain bd lifestyle.",
 
       lead,
       tabPanel,
@@ -267,35 +267,13 @@ export default function About() {
               <img
                 className="about-ceo-image"
                 src={content.image}
-                alt="Md Raquibul Islam Rakib"
+                alt="Md Amran Hossain, CEO of The Brain bd lifestyle"
                 loading="eager"
                 decoding="async"
               />
             </div>
 
-            <div className="about-online-card">
-              <div className="about-online-head">
-                <span>My Businesses</span>
-              </div>
 
-              <div className="about-person-row">
-                <span className="about-avatar" />
-                <span>Ponnobd Team</span>
-                <span className="about-dots">•••</span>
-              </div>
-
-              <div className="about-person-row">
-                <span className="about-avatar two" />
-                <span>Pentanik IT</span>
-                <span className="about-dots">•••</span>
-              </div>
-
-              <div className="about-person-row">
-                <span className="about-avatar three" />
-                <span>Servicebari</span>
-                <span className="about-dots">•••</span>
-              </div>
-            </div>
           </div>
         </section>
 

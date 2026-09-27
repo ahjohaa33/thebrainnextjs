@@ -3,25 +3,56 @@ import SiteHeader from "@/components/frontend/SiteHeader";
 import Shopview from "./Shopview";
 import { apiUrl } from "@/lib/config";
 
+const SHOP_QUERY_KEYS = [
+  "page",
+  "limit",
+  "sort",
+  "availability",
+  "brand",
+  "minPrice",
+  "maxPrice",
+  "query",
+  "category_id",
+];
+
+function firstSearchValue(value) {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+function buildShopQuery(searchParams = {}) {
+  const params = new URLSearchParams();
+
+  SHOP_QUERY_KEYS.forEach((key) => {
+    const value = String(firstSearchValue(searchParams?.[key])).trim();
+    if (value) params.set(key, value);
+  });
+
+  // Keep the original shop defaults when the URL does not override them.
+  if (!params.has("page")) params.set("page", "1");
+  if (!params.has("limit")) params.set("limit", "12");
+  if (!params.has("sort")) params.set("sort", "low");
+
+  return params;
+}
+
 // Server component wrapper.
 //
-// SiteHeader is an async Server Component (it awaits getHomePageData()),
-// so the page that renders it must itself be a Server Component.
-// All the interactive shop logic lives in ShopView (a client component).
-//
-// ShopView uses useSearchParams() which must be wrapped in <Suspense> when
-// rendered from a Server Component, otherwise Next.js will bail out of
-// static rendering for the whole page and log a warning.
-//
-// Initial products are fetched server-side and passed as props so the
-// page arrives with content already rendered — no client-side loading
-// spinner on first paint.
-async function getInitialShopData() {
+// IMPORTANT: the initial Laravel request must use the same filters that are
+// present in the public /shop URL. Otherwise a request such as
+// /shop?query=television (including searches submitted from the header) would
+// hydrate with the unfiltered first page. ShopView intentionally skips its
+// first client request when server data exists, so mismatched server data made
+// search and direct/reloaded price-filter URLs look broken.
+async function getInitialShopData(searchParams = {}) {
+  const params = buildShopQuery(searchParams);
+
   try {
-    const res = await fetch(apiUrl("/shop?page=1&limit=12&sort=low"), {
+    const res = await fetch(apiUrl(`/shop?${params.toString()}`), {
       headers: { Accept: "application/json" },
       next: { revalidate: 300, tags: ["shop"] },
     });
+
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -29,8 +60,9 @@ async function getInitialShopData() {
   }
 }
 
-export default async function ShopPage() {
-  const initialData = await getInitialShopData();
+export default async function ShopPage({ searchParams }) {
+  const resolvedSearchParams = (await searchParams) || {};
+  const initialData = await getInitialShopData(resolvedSearchParams);
 
   return (
     <>
