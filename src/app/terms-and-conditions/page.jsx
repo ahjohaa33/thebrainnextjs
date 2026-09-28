@@ -287,7 +287,7 @@ export default function TermsAndConditionsPage() {
                   <a href={buildWhatsAppUrl()}>{SALES_WHATSAPP_E164}</a>
                 </div>
                 <div className={styles.contactRow}>
-                  <strong>Website:</strong> <Link href="/">ponnobd.com</Link>
+                  <strong>Website:</strong> <Link href="/">thebrainbd.com</Link>
                 </div>
               </div>
             </section>
