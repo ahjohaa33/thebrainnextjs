@@ -524,9 +524,7 @@ export default function ShopView({ initialData = null }) {
                         </a>
 
                         <div className={styles.productBody}>
-                          {product.brand?.name && (
-                            <p className={styles.brandName}>{product.brand.name}</p>
-                          )}
+
 
                           <h2 className={styles.productName}>
                             <a href={productUrl}>{product.name}</a>

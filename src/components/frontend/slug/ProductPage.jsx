@@ -351,9 +351,23 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
 
 
 
-  const shortDescription = normalizeHtml(product.short_description);
+ 
 
+function decodeEntities(input) {
+  if (typeof input !== "string" || input.indexOf("&") === -1) return input;
 
+  return input.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, body) => {
+    if (body[0] === "#") {
+      const code =
+        body[1] === "x" || body[1] === "X"
+          ? parseInt(body.slice(2), 16)
+          : parseInt(body.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    const named = NAMED_ENTITIES[body.toLowerCase()];
+    return named !== undefined ? named : match;
+  });
+}
 
 
 
@@ -371,6 +385,9 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
   const summaryWarranty = getProductWarranty(product);
   const summaryPrice = getProductSummaryPrice(product);
   const orderPhone = SALES_WHATSAPP_E164;
+  const features = Array.isArray(product.features)
+    ? product.features.filter(Boolean).map(decodeEntities)
+    : [];
 
   const whatsAppOrderUrl = `https://wa.me/${SALES_WHATSAPP_DIGITS}?text=${encodeURIComponent(
     `Hello, I want to order: ${product?.name || "this product"} ${
@@ -448,12 +465,15 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
       <h1 className={styles.title}>{product.name}</h1>
     </div>
 
-    {shortDescription ? (
-      <div
-        className={styles.shortDescription}
-        dangerouslySetInnerHTML={{ __html: shortDescription }}
-      />
-    ) : null}
+        {features.length > 0 ? (
+          <ul className={styles.featureList}>
+            {features.map((feature, index) => (
+              <li key={`${product.id || product.slug || "product"}-${index}`}>
+                {feature}
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
     <div className={styles.supportNumber}>
       <p>
@@ -685,10 +705,7 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
                 ) : null}
 
                 <div className={styles.quickSummaryRows}>
-                  <div className={styles.quickSummaryRow}>
-                    <span>Brand</span>
-                    <strong>{summaryBrand}</strong>
-                  </div>
+
 
                   <div className={styles.quickSummaryRow}>
                     <span>Category</span>
