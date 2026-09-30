@@ -105,14 +105,15 @@ function getProductWarranty(product) {
   );
 }
 
-function getProductSummaryPrice(product) {
-  return (
-    product?.discount_price ||
-    product?.sale_price ||
-    product?.regular_price ||
-    product?.price ||
-    0
-  );
+function getProductSummaryPrice(product = {}) {
+  const regularPrice = Number(product?.price ?? 0);
+  const offerPrice = Number(product?.offer_price ?? 0);
+
+  if (offerPrice > 0 && regularPrice > 0 && offerPrice < regularPrice) {
+    return offerPrice;
+  }
+
+  return regularPrice > 0 ? regularPrice : offerPrice;
 }
 
 function FacebookIcon(props) {
@@ -377,7 +378,17 @@ function decodeEntities(input) {
         .slice(0, 4)
     : [];
 
-  const quantity = Number(product.current_stock || 0);
+  const quantity = Number(product.current_stock ?? product.stock ?? 0);
+  const regularPrice = Number(product.price ?? 0);
+  const offerPrice = Number(product.offer_price ?? 0);
+  const hasOffer =
+    regularPrice > 0 &&
+    offerPrice > 0 &&
+    offerPrice < regularPrice;
+  const sellingPrice = hasOffer ? offerPrice : regularPrice;
+  const isInStock = product.stock_status
+    ? product.stock_status === "in_stock" && quantity > 0
+    : quantity > 0;
 
   const summaryImage = activeImage || images[0] || "";
   const summaryBrand = getProductBrand(product);
@@ -498,20 +509,19 @@ function decodeEntities(input) {
       <div className={styles.priceBlock}>
         <p>
           Price:{" "}
-          {Number(product.regular_price) !==
-          Number(product.discount_price) ? (
+          {hasOffer ? (
             <>
               <span className={styles.discountPrice}>
-                {formatPrice(product.discount_price)}
+                {formatPrice(offerPrice)}
               </span>
 
-              <span className={styles.oldPrice}>
-                {formatPrice(product.regular_price)}
-              </span>
+              <del className={styles.oldPrice}>
+                {formatPrice(regularPrice)}
+              </del>
             </>
           ) : (
             <span className={styles.discountPrice}>
-              {formatPrice(product.discount_price)}
+              {formatPrice(sellingPrice)}
             </span>
           )}
         </p>
@@ -521,9 +531,9 @@ function decodeEntities(input) {
         <p>
           Status:{" "}
           <span
-            className={quantity > 0 ? styles.inStock : styles.outStock}
+            className={isInStock ? styles.inStock : styles.outStock}
           >
-            {quantity > 0 ? "In Stock" : "Out Of Stock"}
+            {isInStock ? "In Stock" : "Out Of Stock"}
           </span>
         </p>
       </div>
@@ -647,11 +657,15 @@ function decodeEntities(input) {
                   <div className={styles.relatedList}>
                     {relatedProducts.map((related, index) => {
                       const relatedImage = getRelatedImage(related);
-                      const relatedPrice =
-                        related?.discount_price ||
-                        related?.sale_price ||
-                        related?.regular_price ||
-                        related?.price;
+                      const relatedRegularPrice = Number(related?.price ?? 0);
+                      const relatedOfferPrice = Number(related?.offer_price ?? 0);
+                      const relatedHasOffer =
+                        relatedRegularPrice > 0 &&
+                        relatedOfferPrice > 0 &&
+                        relatedOfferPrice < relatedRegularPrice;
+                      const relatedPrice = relatedHasOffer
+                        ? relatedOfferPrice
+                        : relatedRegularPrice;
 
                       return (
                         <Link
@@ -678,7 +692,12 @@ function decodeEntities(input) {
                             </h3>
 
                             <p className={styles.relatedProductPrice}>
-                              {formatRelatedPrice(relatedPrice)}
+                              <span>{formatRelatedPrice(relatedPrice)}</span>
+                              {relatedHasOffer ? (
+                                <del className={styles.relatedOldPrice}>
+                                  {formatRelatedPrice(relatedRegularPrice)}
+                                </del>
+                              ) : null}
                             </p>
                           </div>
                         </Link>
@@ -723,12 +742,12 @@ function decodeEntities(input) {
                     <span>Stock</span>
                     <strong
                       className={
-                        quantity > 0
+                        isInStock
                           ? styles.quickSummaryStockIn
                           : styles.quickSummaryStockOut
                       }
                     >
-                      {quantity > 0 ? "In Stock" : "Out Of Stock"}
+                      {isInStock ? "In Stock" : "Out Of Stock"}
                     </strong>
                   </div>
 

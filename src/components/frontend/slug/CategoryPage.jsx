@@ -22,36 +22,24 @@ function formatPrice(value) {
   }).format(Number(value || 0));
 }
 
-function getProductPrice(product) {
-  return (
-    product.price ??
-    product.discount_price ??
-    product.discount ??
-    product.sale_price ??
-    product.unit_price ??
-    product.regular_price ??
-    0
-  );
+function getProductPrice(product = {}) {
+  return Number(product.price ?? 0);
 }
 
-function getOldPrice(product) {
-  return (
-    product.old_price ??
-    product.regular_price ??
-    product.unit_price ??
-    product.price ??
-    0
-  );
+function getOldPrice(product = {}) {
+  return Number(product.old_price ?? 0);
+}
+
+function getOfferPrice(product = {}) {
+  return Number(product.offer_price ?? 0);
 }
 
 function normalizeProductForBox(product = {}) {
-  const price = Number(getProductPrice(product));
-  const oldPrice = Number(getOldPrice(product));
-
   return {
     ...product,
-    price,
-    old_price: oldPrice > 0 ? oldPrice : price,
+    price: getProductPrice(product),
+    old_price: getOldPrice(product),
+    offer_price: getOfferPrice(product),
     features:
       product.features ||
       product.short_features ||
@@ -60,8 +48,9 @@ function normalizeProductForBox(product = {}) {
     url: product.url || (product.slug ? `/${product.slug}` : "#"),
     thumbnail:
       product.thumbnail ||
-      product.thumbnail_img ||
+      product.thumbnail_url ||
       product.image ||
+      product.webp ||
       "",
   };
 }

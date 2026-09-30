@@ -222,8 +222,12 @@
 .oldPrice {
   margin-left: 8px;
   font-size: 14px;
-  color: #6b7280;
-  text-decoration: line-through;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration-line: line-through;
+  text-decoration-style: solid;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #9ca3af;
 }
 
 .inStock {
@@ -779,10 +783,23 @@
 
 .relatedProductPrice {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
   font-size: 16px;
   font-weight: 900;
   line-height: 1.2;
-  color: #ff5a00;
+  color: #dc2626;
+}
+
+.relatedOldPrice {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration-line: line-through;
+  text-decoration-thickness: 1.25px;
+  text-decoration-color: #9ca3af;
 }
 
 /* =========================

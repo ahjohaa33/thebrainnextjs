@@ -511,7 +511,13 @@ export default function ShopView({ initialData = null }) {
                     const productSlug = product.slug || product.url || '';
                     const productUrl = productSlug ? `/${productSlug}` : '#';
 
-                   const price = Number(product.offer_price || 0);
+                    const regularPrice = Number(product.price ?? 0);
+                    const offerPrice = Number(product.offer_price ?? 0);
+                    const hasOffer =
+                      regularPrice > 0 &&
+                      offerPrice > 0 &&
+                      offerPrice < regularPrice;
+                    const price = hasOffer ? offerPrice : regularPrice;
 
                     return (
                       <article className={styles.productCard} key={product.id}>
@@ -533,8 +539,8 @@ export default function ShopView({ initialData = null }) {
                           <div className={styles.priceRow}>
                             <strong>{money(price)}</strong>
 
-                            {product.discount_price && (
-                              <del>{money(product.unit_price)}</del>
+                            {hasOffer && (
+                              <del>{money(regularPrice)}</del>
                             )}
                           </div>
 

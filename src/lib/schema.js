@@ -162,12 +162,12 @@ const AVAILABILITY = {
   preorder: "https://schema.org/PreOrder",
 };
 
-function pickPrice(product) {
-  // Prefer discount_price if it differs from regular_price; otherwise either.
-  const discount = Number(product.discount_price ?? product.price ?? 0);
-  const regular = Number(product.regular_price ?? product.old_price ?? 0);
-  if (discount > 0 && regular > 0 && discount < regular) return discount;
-  return discount > 0 ? discount : regular;
+function pickPrice(product = {}) {
+  const regular = Number(product.price ?? 0);
+  const offer = Number(product.offer_price ?? 0);
+
+  if (offer > 0 && regular > 0 && offer < regular) return offer;
+  return regular > 0 ? regular : offer;
 }
 
 export function buildProductSchema(product = {}) {
@@ -270,15 +270,13 @@ function getProductImage(product = {}) {
 }
 
 function getListProductPrice(product = {}) {
-  return (
-    product.price ??
-    product.discount_price ??
-    product.sale_price ??
-    product.unit_price ??
-    product.regular_price ??
-    product.old_price ??
-    null
-  );
+  const regular = Number(product.price ?? 0);
+  const offer = Number(product.offer_price ?? 0);
+
+  if (offer > 0 && regular > 0 && offer < regular) return offer;
+  if (regular > 0) return regular;
+  if (offer > 0) return offer;
+  return null;
 }
 
 export function buildItemListSchema({ name, products = [], pathname = "/" }) {

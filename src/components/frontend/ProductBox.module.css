@@ -1,13 +1,33 @@
+/* components/frontend/ProductBox.module.css */
+
+/* =========================
+   Product Card
+========================= */
+
 .card {
   position: relative;
+
   display: flex;
   flex-direction: column;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
   height: 100%;
+  min-height: 100%;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  background: #ffffff;
+
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card:hover {
@@ -15,236 +35,327 @@
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
 }
 
+
+/* =========================
+   Discount / Product Tag
+========================= */
+
 .tagWrap {
   position: absolute;
   top: 12px;
   left: 12px;
   z-index: 2;
+
+  max-width: calc(100% - 24px);
 }
 
 .tagText {
   margin: 0;
+  padding: 6px 10px;
+
+  max-width: 100%;
+
   background: #111827;
   color: #ffffff;
+
+  border-radius: 999px;
+
   font-size: 12px;
   font-weight: 700;
-  padding: 6px 10px;
-  border-radius: 999px;
+  line-height: 1.2;
+
+  overflow-wrap: anywhere;
 }
 
+
+/* =========================
+   Product Image
+========================= */
+
+/*
+ * Kept for compatibility if ProductBox uses a thumbWrap.
+ */
 .thumbWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 100%;
+
+  height: 220px;
+  min-height: 220px;
+
+  box-sizing: border-box;
+
+  background: #f8fafc;
+
+  overflow: hidden;
+}
+
+/*
+ * Current ProductBox can also render the image directly inside <Link>,
+ * so the image itself gets a fixed card-image height.
+ */
+.image {
   display: block;
-  aspect-ratio: 1 / 1;
+
+  width: 100%;
+  max-width: 100%;
+
+  height: 220px;
+
+  object-fit: contain;
+  object-position: center;
+
   background: #f8fafc;
 }
 
-.image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+
+/* =========================
+   Product Content
+========================= */
 
 .contentWrap {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+
+  flex: 1 1 auto;
+
   padding: 14px 14px 8px;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
 }
 
 .titleLink {
-  text-decoration: none;
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+
   color: inherit;
+  text-decoration: none;
+}
+
+.titleLink:hover {
+  text-decoration: none;
 }
 
 .title {
   margin: 0 0 8px;
+
+  min-height: 42px;
+  max-width: 100%;
+
+  color: #111827;
+
   font-size: 14px;
   font-weight: 500;
   line-height: 1.5;
-  color: #111827;
-  min-height: 42px;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  overflow: hidden;
 }
+
+
+/* =========================
+   Product Features
+========================= */
 
 .featureList {
   margin: 0;
   padding-left: 18px;
+
+  max-width: 100%;
+
   color: #4b5563;
+
   font-size: 13px;
   line-height: 1.55;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  overflow: hidden;
+}
+
+.featureList li {
+  max-width: 100%;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .featureList li + li {
   margin-top: 4px;
 }
 
+
+/* =========================
+   Product Price
+========================= */
+
 .priceWrap {
   display: flex;
-  justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+
   gap: 8px;
+  flex-wrap: wrap;
+
   margin-top: auto;
   margin-bottom: 14px;
+
   padding: 0 14px;
+
+  box-sizing: border-box;
 }
 
+/*
+ * Normal price when there is no active offer.
+ */
 .price {
   margin: 0;
+
+  color: #111827;
+
   font-size: 18px;
   font-weight: 700;
-  color: #dc2626;
+  line-height: 1.2;
+
+  white-space: nowrap;
 }
 
+/*
+ * Current selling price when offer_price is active.
+ */
+.offerPrice {
+  margin: 0;
+
+  color: #dc2626;
+
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  white-space: nowrap;
+}
+
+/*
+ * Regular price shown beside offer_price.
+ *
+ * ProductBox should preferably render this as:
+ *
+ * <del className={styles.oldPrice}>
+ *   {formatBDT(regularPrice)}
+ * </del>
+ */
 .oldPrice {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #6b7280;
-  text-decoration: line-through;
+  padding: 0;
+
+  color: #9ca3af;
+
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+  text-decoration-line: line-through;
+  text-decoration-style: solid;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #9ca3af;
+
+  opacity: 0.9;
 }
 
+
+/* =========================
+   Add To Cart
+========================= */
+
 .btnWrap {
+  width: 100%;
+  min-width: 0;
+
+  flex: 0 0 auto;
+
   padding: 0 14px 14px;
+
+  box-sizing: border-box;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   width: 100%;
+  max-width: 100%;
   min-height: 44px;
-  border-radius: 8px;
+
+  box-sizing: border-box;
+
+  padding: 10px 14px;
+
   background: #111827;
   color: #ffffff;
+
+  border: 0;
+  border-radius: 8px;
+
+  text-align: center;
   text-decoration: none;
+
+  font-size: 14px;
   font-weight: 700;
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .btn:hover {
   opacity: 0.94;
 }
 
+.btn:active {
+  transform: translateY(1px);
+}
+
 
 /* =========================
-   ProductBox equal height + image fit fix
+   Responsive
 ========================= */
 
-.card {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  height: 100%;
-  min-height: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.thumbWrap {
-  width: 100%;
-  max-width: 100%;
-  height: 220px;
-  min-height: 220px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-.image {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.contentWrap {
-  width: 100%;
-  min-width: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-}
-
-.titleLink {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  text-decoration: none;
-}
-
-.title {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.featureList {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  overflow: hidden;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-}
-
-.featureList li {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.priceWrap {
-  width: 100%;
-  min-width: 0;
-  margin-top: auto;
-  overflow: hidden;
-}
-
-.price,
-.oldPrice {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.btnWrap {
-  width: 100%;
-  min-width: 0;
-  flex: 0 0 auto;
-}
-
-.btn {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  text-align: center;
-}
-
-/* Discount tag should never push card outside */
-.tagWrap {
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.tagText {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-/* Responsive image height */
 @media (max-width: 991px) {
   .thumbWrap {
     height: 200px;
     min-height: 200px;
+  }
+
+  .image {
+    height: 200px;
   }
 }
 
@@ -252,5 +363,34 @@
   .thumbWrap {
     height: 190px;
     min-height: 190px;
+  }
+
+  .image {
+    height: 190px;
+  }
+
+  .contentWrap {
+    padding: 12px 12px 8px;
+  }
+
+  .priceWrap {
+    gap: 6px;
+
+    margin-bottom: 12px;
+
+    padding: 0 12px;
+  }
+
+  .price,
+  .offerPrice {
+    font-size: 17px;
+  }
+
+  .oldPrice {
+    font-size: 13px;
+  }
+
+  .btnWrap {
+    padding: 0 12px 12px;
   }
 }

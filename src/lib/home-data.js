@@ -11,20 +11,47 @@ function normalizeProduct(product = {}, index = 0) {
     id: product.id ?? `product-${index}`,
     name: product.name || "",
     slug: product.slug || "",
-    thumbnail: absoluteUrl(
-      product.thumbnail || product.thumbnail_img || product.image || "",
-      product.thumbnail_updated_at || product.updated_at
-    ),
     url:
       typeof product.url === "string" && product.url.trim() !== ""
         ? product.url.trim()
         : product.slug
         ? `/${String(product.slug).replace(/^\/+/, "")}`
         : "#",
+
+    thumbnail: absoluteUrl(
+      product.thumbnail ||
+        product.thumbnail_url ||
+        product.image ||
+        product.webp ||
+        "",
+      product.thumbnail_updated_at || product.updated_at
+    ),
+    thumbnail_url: absoluteUrl(
+      product.thumbnail_url || product.thumbnail || product.image || "",
+      product.thumbnail_updated_at || product.updated_at
+    ),
+    image: absoluteUrl(
+      product.image || product.thumbnail || product.thumbnail_url || "",
+      product.thumbnail_updated_at || product.updated_at
+    ),
+    thumbnail_updated_at: product.thumbnail_updated_at || null,
+    updated_at: product.updated_at || null,
+
+    // Canonical price contract from the Laravel API. Do not manufacture
+    // discount_price / sale_price / regular_price / unit_price aliases here.
+    price: Number(product.price ?? 0),
+    old_price: Number(product.old_price ?? 0),
+    offer_price: Number(product.offer_price ?? 0),
+
+    current_stock: Number(product.current_stock ?? product.stock ?? 0),
+    stock: Number(product.stock ?? product.current_stock ?? 0),
+    stock_status: product.stock_status || "",
+
+    brand: product.brand || null,
+    brand_name: product.brand_name || product.brand?.name || "",
     features: normalizeArray(product.features || product.short_features),
-    price: product.price ?? product.discount_price ?? 0,
-    old_price: product.old_price ?? product.regular_price ?? 0,
-    discount_percentage: product.discount_percentage ?? 0,
+    short_features: normalizeArray(product.short_features || product.features),
+    alt: product.alt || product.name || "Product",
   };
 }
 

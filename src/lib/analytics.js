@@ -49,14 +49,15 @@ export function toItem(input = {}, overrides = {}) {
     "";
   const name =
     input.item_name || product.item_name || product.name || product.title || "";
-  const price = Number(
-    input.price ??
-      product.price ??
-      product.discount_price ??
-      product.unit_price ??
-      product.regular_price ??
-      0
-  );
+  const explicitLinePrice = input.product ? Number(input.price ?? 0) : 0;
+  const regularPrice = Number(product.price ?? input.price ?? 0);
+  const offerPrice = Number(product.offer_price ?? 0);
+  const price =
+    explicitLinePrice > 0
+      ? explicitLinePrice
+      : offerPrice > 0 && regularPrice > 0 && offerPrice < regularPrice
+      ? offerPrice
+      : regularPrice;
   const quantity = Number(input.quantity ?? input.qty ?? 1);
 
   const category = product.category?.name || product.categories?.[0]?.name;
