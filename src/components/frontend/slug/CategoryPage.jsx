@@ -532,30 +532,7 @@ export default function CategoryPage({
                 </label>
               </div>
 
-              {brands.length > 0 ? (
-                <div className={styles.filterGroup}>
-                  <div className={styles.filterLabel}>Brand</div>
 
-                  {brands.map((brand) => (
-                    <label className={styles.filterOption} key={brand.id}>
-                      <input
-                        type="radio"
-                        name="brand_id"
-                        value={brand.id}
-                        checked={String(currentBrand) === String(brand.id)}
-                        onChange={() =>
-                          updateParams({
-                            brand_id: brand.id,
-                            brand: "",
-                          })
-                        }
-                      />
-
-                      <span>{brand.name}</span>
-                    </label>
-                  ))}
-                </div>
-              ) : null}
 
               {attributeGroups.map((attribute) => {
                 const currentValue = searchParams.get(
