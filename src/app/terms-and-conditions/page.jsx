@@ -12,7 +12,7 @@ const LAST_UPDATED = "July 1, 2026";
 export const metadata = buildMetadata({
   title: `Terms & Conditions | ${SITE_NAME}`,
   description:
-    "Read the terms and conditions for shopping on Ponnobd Electronics — orders, pricing, delivery, payment, warranty, returns, and your rights as a customer.",
+    "Read the terms and conditions for shopping on The Brainbd Lifestyle — orders, pricing, delivery, payment, warranty, returns, and your rights as a customer.",
   path: "/terms-and-conditions",
 });
 
@@ -50,7 +50,7 @@ export default function TermsAndConditionsPage() {
         <LegalHero
           eyebrow="Legal"
           title="Terms & Conditions"
-          description="The rules that govern your use of Ponnobd Electronics and any order you place with us."
+          description="The rules that govern your use of The Brainbd Lifestyle and any order you place with us."
           crumbLabel="Terms & Conditions"
         />
 
@@ -72,7 +72,7 @@ export default function TermsAndConditionsPage() {
           <main className={styles.content}>
             <p className={styles.intro}>
               These Terms & Conditions (&quot;Terms&quot;) govern your access to and use of the
-              Ponnobd Electronics website and the purchase of any product listed on it.
+              The Brainbd Lifestyle website and the purchase of any product listed on it.
               By browsing this website or placing an order, you agree to be bound by
               these Terms. Please read them carefully before shopping with us.
             </p>
@@ -96,7 +96,7 @@ export default function TermsAndConditionsPage() {
               </h2>
               <p>
                 You must be at least 18 years old, or placing an order under the
-                supervision of a parent or guardian, to order from Ponnobd Electronics.
+                supervision of a parent or guardian, to order from The Brainbd Lifestyle.
                 You are responsible for providing accurate delivery and contact
                 information, and for keeping any account or order credentials you use
                 on this website confidential.
@@ -208,7 +208,7 @@ export default function TermsAndConditionsPage() {
                 <span className={styles.sectionNum}>9</span>Intellectual Property
               </h2>
               <p>
-                All content on this website — including the Ponnobd Electronics name,
+                All content on this website — including the The Brainbd Lifestyle name,
                 logo, product photography, text, and design — is owned by or licensed
                 to us and is protected by applicable intellectual property laws. You
                 may not copy, reproduce, or use this content commercially without our
@@ -240,7 +240,7 @@ export default function TermsAndConditionsPage() {
                 <span className={styles.sectionNum}>11</span>Limitation of Liability
               </h2>
               <p>
-                To the maximum extent permitted by law, Ponnobd Electronics shall not be
+                To the maximum extent permitted by law, The Brainbd Lifestyle shall not be
                 liable for any indirect, incidental, or consequential damages arising
                 from the use of this website or a purchased product, beyond the value
                 of the order itself. Nothing in these Terms limits any right you have
@@ -287,7 +287,7 @@ export default function TermsAndConditionsPage() {
                   <a href={buildWhatsAppUrl()}>{SALES_WHATSAPP_E164}</a>
                 </div>
                 <div className={styles.contactRow}>
-                  <strong>Website:</strong> <Link href="/">thebrainbd.com</Link>
+                  <strong>Website:</strong> <Link href="https://thebrainbd.com">thebrainbd.com</Link>
                 </div>
               </div>
             </section>

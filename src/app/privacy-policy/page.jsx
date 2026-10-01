@@ -12,7 +12,7 @@ const LAST_UPDATED = "July 1, 2026";
 export const metadata = buildMetadata({
   title: `Privacy Policy | ${SITE_NAME}`,
   description:
-    "Learn how Ponnobd Electronics collects, uses, and protects your personal information when you browse the website or place an order.",
+    "Learn how The Brainbd Lifestyle collects, uses, and protects your personal information when you browse the website or place an order.",
   path: "/privacy-policy",
 });
 
@@ -48,7 +48,7 @@ export default function PrivacyPolicyPage() {
         <LegalHero
           eyebrow="Legal"
           title="Privacy Policy"
-          description="How we collect, use, and protect your information when you shop with Ponnobd Electronics."
+          description="How we collect, use, and protect your information when you shop with The Brainbd Lifestyle."
           crumbLabel="Privacy Policy"
         />
 
@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
 
           <main className={styles.content}>
             <p className={styles.intro}>
-              Ponnobd Electronics (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) respects your privacy. This
+              The Brainbd Lifestyle (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) respects your privacy. This
               Privacy Policy explains what information we collect when you visit our
               website or place an order, how we use it, and the choices you have. By
               using this website, you agree to the practices described below.
@@ -80,8 +80,8 @@ export default function PrivacyPolicyPage() {
                 <span className={styles.sectionNum}>1</span>Overview
               </h2>
               <p>
-                This policy applies to information collected through the Ponnobd
-                Electronics website, our order and delivery process, and any
+                This policy applies to information collected through the The Brainbd Lifestyle
+                website, our order and delivery process, and any
                 communication you have with our support team via phone or WhatsApp. It
                 does not apply to third-party websites we may link to.
               </p>
@@ -274,7 +274,7 @@ export default function PrivacyPolicyPage() {
                   <a href={buildWhatsAppUrl()}>{SALES_WHATSAPP_E164}</a>
                 </div>
                 <div className={styles.contactRow}>
-                  <strong>Website:</strong> <Link href="/">ponnobd.com</Link>
+                  <strong>Website:</strong> <Link href="https://thebrainbd.com">thebrainbd.com</Link>
                 </div>
               </div>
             </section>
