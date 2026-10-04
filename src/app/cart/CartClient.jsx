@@ -246,7 +246,7 @@ export default function CartPage() {
                   <div className="d-flex flex-column justify-content-center align-items-center gap--12 w--100">
                     <Link
                       href="/checkout"
-                      className="btn btn--base w-100 btn--lg w--100"
+                      className="btn w-100 btn--lg w--100" style={{ background: "#111827", color: "#fff" }}
                       onClick={handleProceedToCheckout}
                     >
                       Proceed To Checkout ({cartItems.length})
