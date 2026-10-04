@@ -88,7 +88,7 @@ body {
   margin-bottom: 16px;
   padding: 9px 18px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff7f1d, #e95b08);
+  background: black;
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
@@ -273,7 +273,7 @@ body {
   width: 4px;
   height: 54px;
   border-radius: 0 10px 10px 0;
-  background: linear-gradient(180deg, #ff7f1d, #e95b08);
+  background: black;
   z-index: 2;
   transition: background 0.35s ease, width 0.35s ease;
 }

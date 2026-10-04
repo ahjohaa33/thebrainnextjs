@@ -254,7 +254,7 @@ export default function ProductBox({
           </h3>
         </Link>
 
-        {features.length > 0 && (
+        {/* {features.length > 0 && (
           <ul className={styles.featureList}>
             {features.map(
               (feature, index) => (
@@ -270,7 +270,7 @@ export default function ProductBox({
               )
             )}
           </ul>
-        )}
+        )} */}
       </div>
 
       {/* Product price */}

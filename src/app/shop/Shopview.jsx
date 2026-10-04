@@ -195,31 +195,31 @@ export default function ShopView({ initialData = null }) {
     }
   }
 
-  async function addToWishlist(productId) {
-    setWishlistLoadingId(productId);
-    setMessage(null);
+  // async function addToWishlist(productId) {
+  //   setWishlistLoadingId(productId);
+  //   setMessage(null);
 
-    try {
-      const result = await apiRequest('/wishlist', {
-        method: 'POST',
-        body: JSON.stringify({
-          product_id: productId,
-        }),
-      });
+  //   try {
+  //     const result = await apiRequest('/wishlist', {
+  //       method: 'POST',
+  //       body: JSON.stringify({
+  //         product_id: productId,
+  //       }),
+  //     });
 
-      setMessage({
-        type: 'success',
-        text: result.message || 'Product added to wishlist!',
-      });
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error.message || 'Product already exists in wishlist.',
-      });
-    } finally {
-      setWishlistLoadingId(null);
-    }
-  }
+  //     setMessage({
+  //       type: 'success',
+  //       text: result.message || 'Product added to wishlist!',
+  //     });
+  //   } catch (error) {
+  //     setMessage({
+  //       type: 'error',
+  //       text: error.message || 'Product already exists in wishlist.',
+  //     });
+  //   } finally {
+  //     setWishlistLoadingId(null);
+  //   }
+  // }
 
   // Track whether the initial server data has already been consumed so the
   // first client-side effect doesn't double-fetch on hydration.
@@ -677,7 +677,7 @@ export default function ShopView({ initialData = null }) {
                               <del>{money(regularPrice)}</del>
                             )}
                           </div>
-
+{/* 
                           <p
                             className={
                               Number(product.current_stock || 0) > 0
@@ -688,7 +688,7 @@ export default function ShopView({ initialData = null }) {
                             {Number(product.current_stock || 0) > 0
                               ? 'In Stock'
                               : 'Out Stock'}
-                          </p>
+                          </p> */}
 
                           <div className={styles.cardActions}>
                             <a href={productUrl} className={styles.detailsButton}>

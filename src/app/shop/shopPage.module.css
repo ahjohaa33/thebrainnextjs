@@ -101,6 +101,7 @@
 .button,
 .clearButton,
 .detailsButton {
+  
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -118,19 +119,19 @@
 .button {
   width: 100%;
   color: #ffffff;
-  background: #0b1c49;
+  background: #111827;
 }
 
 .button:hover,
 .detailsButton:hover {
-  background: #0b1c49;
+  background: #111827;
 }
 
 .clearButton {
   width: 100%;
-  color: #0b1c49;
-  background: #fff2f0;
-  border: 1px solid #ffd4cf;
+  background: #111827;
+  color: #fff2f0;
+  
 }
 
 .clearButton:hover {
@@ -173,7 +174,7 @@
 .activeCategory {
   border-color: #cdebd9;
   background: #f0fff6;
-  color: #0b1c49;
+  color: #111827;
 }
 
 .categoryButton small {
@@ -380,7 +381,7 @@
 }
 
 .productName a:hover {
-  color: #15803d;
+  color: #111827;
 }
 
 .priceRow {
@@ -392,7 +393,7 @@
 }
 
 .priceRow strong {
-  color: #df6616;
+  color: #dc2626;
   font-size: 17px;
 }
 
@@ -425,7 +426,7 @@
 .detailsButton {
   flex: 1;
   color: #ffffff;
-  background: #0b1c49;
+  background: #111827;
 }
 
 .wishlistButton {
@@ -480,8 +481,8 @@
 }
 
 .pagination .activePage {
-  background: #22a55b;
-  border-color: #22a55b;
+  background: #111827;
+  border-color: #111827;
   color: #ffffff;
 }
 
@@ -589,7 +590,7 @@
     flex-shrink: 0;
     border: 0;
     border-radius: 50%;
-    background: #0b1c49;
+   background: #111827;
     color: #ffffff;
     font-size: 22px;
     line-height: 1;
@@ -604,7 +605,7 @@
     padding: 8px 14px;
     border: 0;
     border-radius: 9px;
-    background: #0b1c49;
+    background: #111827;
     color: #ffffff;
     font-weight: 800;
   }

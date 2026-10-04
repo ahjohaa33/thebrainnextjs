@@ -103,8 +103,8 @@
 
 .socialButton:hover {
   color: #ffffff;
-  background: #ff5a1f;
-  border-color: #ff5a1f;
+  background: yellow;
+  border-color: yellow;
   transform: translateY(-3px);
 }
 
@@ -137,7 +137,7 @@
   width: 30px;
   height: 2px;
   border-radius: 999px;
-  background: #ff5a1f;
+  background: yellow;
 }
 
 /* ========================================
@@ -204,7 +204,7 @@
   border: 1px solid rgba(255, 90, 31, 0.22);
   border-radius: 10px;
   background: rgba(255, 90, 31, 0.08);
-  color: #ff5a1f;
+  color: yellow;
 }
 
 .contactItem p {
@@ -231,7 +231,7 @@
 }
 
 .contactLink:hover {
-  color: #ff5a1f;
+  color: yellow;
 }
 
 /* ========================================
@@ -272,7 +272,7 @@
 }
 
 .copyright a:hover {
-  color: #ff5a1f;
+  color: yellow;
 }
 
 .bottomLinks {
