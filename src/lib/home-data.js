@@ -118,6 +118,11 @@ function normalizeCategoryLink(link = "") {
 
 export function normalizeHomePayload(data = {}) {
   const siteName = data?.site?.site_name || "Ponnobd";
+  const rawHomeContent = data?.home_content;
+  const homeContent =
+    rawHomeContent && typeof rawHomeContent === "object"
+      ? rawHomeContent
+      : {};
 
   return {
     meta: {
@@ -165,6 +170,19 @@ export function normalizeHomePayload(data = {}) {
     // page.jsx's normalizeVideos() is what maps this into the shape the
     // carousel components expect, so no field-shaping happens here.
     video_sections: normalizeArray(data?.video_sections),
+    home_content: {
+      html:
+        homeContent?.html ||
+        data?.home_content_html ||
+        (typeof rawHomeContent === "string" ? rawHomeContent : "") ||
+        data?.footer_content ||
+        "",
+      markdown:
+        homeContent?.markdown ||
+        data?.home_content_markdown ||
+        "",
+    },
+    // Retained for backward compatibility with older API payloads.
     footer_content: data?.footer_content || "",
   };
 }
@@ -218,6 +236,7 @@ export const getHomePageData = cache(async function getHomePageData() {
       categories: [],
       sections: [],
       video_sections: [],
+      home_content: { html: "", markdown: "" },
       footer_content: "",
     });
   }

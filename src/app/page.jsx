@@ -1,6 +1,6 @@
 import Header from "@/components/frontend/Header";
 import ProductBox from "@/components/frontend/ProductBox";
-import FooterContentExcerpt from "@/components/frontend/FooterContentExcerpt";
+import HomeContentExcerpt from "@/components/frontend/HomeContentExcerpt";
 import JsonLd from "@/components/seo/JsonLd";
 import HomeMediaSections from "@/components/frontend/HomeMediaSections";
 import CapHero from "@/components/frontend/CapHero";
@@ -242,8 +242,11 @@ export default async function Page() {
           </section>
         ))}
 
-        {home.footer_content ? (
-          <FooterContentExcerpt html={home.footer_content} />
+        {home.home_content?.html || home.home_content?.markdown ? (
+          <HomeContentExcerpt
+            html={home.home_content.html}
+            markdown={home.home_content.markdown}
+          />
         ) : null}
       </main>
 

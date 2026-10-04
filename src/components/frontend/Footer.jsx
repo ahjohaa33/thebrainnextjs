@@ -246,6 +246,24 @@ export default async function Footer() {
   const socialLinks =
     data.social_links ?? {};
 
+  // Environment values override API-provided social links when present.
+  // Both server-only and NEXT_PUBLIC_* names are supported for deployment
+  // flexibility; these URLs are ultimately rendered into public footer HTML.
+  const envSocialLinks = {
+    facebook:
+      process.env.FACEBOOK_URL ||
+      process.env.NEXT_PUBLIC_FACEBOOK_URL ||
+      "",
+    youtube:
+      process.env.YOUTUBE_URL ||
+      process.env.NEXT_PUBLIC_YOUTUBE_URL ||
+      "",
+    linkedin:
+      process.env.LINKEDIN_URL ||
+      process.env.NEXT_PUBLIC_LINKEDIN_URL ||
+      "",
+  };
+
   const contact =
     data.contact ?? {};
 
@@ -293,12 +311,12 @@ export default async function Footer() {
 
   const socials = [
     {
-      href: socialLinks.facebook,
+      href: envSocialLinks.facebook || socialLinks.facebook,
       label: "Facebook",
       Icon: IconFacebook,
     },
     {
-      href: socialLinks.youtube,
+      href: envSocialLinks.youtube || socialLinks.youtube,
       label: "YouTube",
       Icon: IconYouTube,
     },
@@ -308,7 +326,7 @@ export default async function Footer() {
       Icon: IconInstagram,
     },
     {
-      href: socialLinks.linkedin,
+      href: envSocialLinks.linkedin || socialLinks.linkedin,
       label: "LinkedIn",
       Icon: IconLinkedIn,
     },

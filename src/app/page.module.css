@@ -930,3 +930,99 @@
     transition: none;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Admin-managed homepage content excerpt                                     */
+/* -------------------------------------------------------------------------- */
+
+.homeContentSection {
+  padding: 28px 0 48px;
+}
+
+.homeContentCard {
+  padding: clamp(20px, 3vw, 32px);
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.homeContentExcerpt,
+.homeContentRich,
+.homeContentMarkdown {
+  margin: 0;
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.homeContentMarkdown {
+  white-space: pre-wrap;
+}
+
+.homeContentRich > :first-child {
+  margin-top: 0;
+}
+
+.homeContentRich > :last-child {
+  margin-bottom: 0;
+}
+
+.homeContentRich h1,
+.homeContentRich h2,
+.homeContentRich h3 {
+  color: #111827;
+}
+
+.homeContentRich a {
+  color: #111827;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.homeContentToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-top: 18px;
+  padding: 10px 18px;
+  color: #ffffff;
+  background: #111827;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.homeContentToggle:hover {
+  opacity: 0.94;
+}
+
+.homeContentToggle:active {
+  transform: translateY(1px);
+}
+
+.homeContentToggle:focus-visible {
+  outline: 3px solid rgba(17, 24, 39, 0.24);
+  outline-offset: 3px;
+}
+
+@media (max-width: 675px) {
+  .homeContentSection {
+    padding: 22px 0 38px;
+  }
+
+  .homeContentCard,
+  .homeContentExcerpt,
+  .homeContentRich,
+  .homeContentMarkdown {
+    text-align: center;
+  }
+
+  .homeContentToggle {
+    width: 100%;
+  }
+}

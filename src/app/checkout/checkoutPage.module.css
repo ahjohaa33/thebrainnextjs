@@ -19,14 +19,14 @@
 }
 
 .breadcrumbInner a {
-  color: rgb(37, 50, 136);
+  color: #111827;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.15s;
 }
 
 .breadcrumbInner a:hover {
-  color: rgb(37, 50, 136);
+  color: #111827;
 }
 
 .breadcrumbSep {
@@ -135,7 +135,7 @@
 
 .checkRow input[type="checkbox"] {
   margin-top: 3px;
-  accent-color: rgb(37, 50, 136);
+  accent-color: #111827;
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -150,7 +150,7 @@
 }
 
 .checkLabel a {
-  color: rgb(37, 50, 136);
+  color: #111827;
   text-decoration: none;
   font-weight: 500;
 }
@@ -258,12 +258,12 @@
 }
 
 .shippingOption.selected {
-  border-color: rgb(37, 50, 136);
-  background: #fff5f5;
+  border-color: #111827;
+  background: #f8fafc;
 }
 
 .shippingOption input[type="radio"] {
-  accent-color: rgb(37, 50, 136);
+  accent-color: #111827;
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -314,7 +314,7 @@
   display: block;
   width: 100%;
   padding: 14px;
-  background: #5939e6;
+  background: #111827;
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
@@ -327,7 +327,7 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: rgb(37, 50, 136);
+  background: #1f2937;
 }
 
 .submitBtn:active:not(:disabled) {
@@ -378,7 +378,7 @@
 
 /* ── Checkout banner (replaces broken image) ─────────────────── */
 .checkoutBanner {
-  background: linear-gradient(135deg, rgb(37, 50, 136) 0%, rgb(37, 50, 136) 100%);
+  background: linear-gradient(135deg, #111827 0%, #111827 100%);
   border-radius: 10px;
   padding: 18px 24px;
   margin-bottom: 20px;
