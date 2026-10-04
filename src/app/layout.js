@@ -10,11 +10,11 @@ import PwaInstaller from "@/components/frontend/PwaInstaller";
 import Analytics, { GtmNoscript } from "@/components/Analytics";
 import EngagementTracker from "@/components/EngagementTracker";
 import JsonLd from "@/components/seo/JsonLd";
-import { buildMetadata, SITE_URL, SITE_NAME } from "@/lib/seo";
+import { buildMetadata, SITE_NAME } from "@/lib/seo";
 import {
   buildOrganizationSchema,
   buildWebsiteSchema,
-  buildElectronicsStoreSchema,
+  buildLifestyleStoreSchema,
 } from "@/lib/schema";
 
 const geistSans = Geist({
@@ -33,7 +33,7 @@ export const metadata = {
   ...buildMetadata({
     title: SITE_NAME,
     description:
-      "Ponnobd Electronics — buy LED TVs, ACs, smartboards, home appliances and more, with delivery across Bangladesh.",
+      "TheBrainBD — luxury lifestyle eCommerce for premium caps, headwear, fashion accessories and modern style in Bangladesh.",
     path: "/",
   }),
   // PWA: link the manifest (served by app/manifest.js at /manifest.webmanifest)
@@ -45,7 +45,7 @@ export const metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Ponnobd",
+    title: "TheBrainBD",
     statusBarStyle: "default",
   },
   icons: {
@@ -83,7 +83,7 @@ export default async function RootLayout({ children }) {
         */}
         <JsonLd id="ld-organization" data={buildOrganizationSchema()} />
         <JsonLd id="ld-website" data={buildWebsiteSchema()} />
-        <JsonLd id="ld-electronics-store" data={buildElectronicsStoreSchema()} />
+        <JsonLd id="ld-lifestyle-store" data={buildLifestyleStoreSchema()} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {/* GTM noscript iframe must be the first thing inside <body>. */}

@@ -2,6 +2,8 @@
   background: #f6f7fb;
   padding: 40px 0;
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .container {
@@ -11,19 +13,24 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 300px minmax(0, 1fr);
   gap: 24px;
   align-items: start;
+  min-width: 0;
 }
 
 .sidebar {
   display: block;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .filterWrap {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .filterTop {
@@ -35,6 +42,8 @@
   border: 1px solid #e8e8e8;
   border-radius: 12px;
   padding: 16px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .filterLabel {
@@ -72,7 +81,7 @@
 
 .priceInputs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -477,26 +486,42 @@
   }
 
   .sidebarOpen {
-    display: block;
+    display: flex;
     position: fixed;
     inset: 0;
-    z-index: 999;
-    background: rgba(15, 23, 42, 0.45);
-    padding: 20px;
-    overflow-y: auto;
+    z-index: 10050;
+    align-items: flex-start;
+    justify-content: flex-start;
+    background: rgba(15, 23, 42, 0.48);
+    padding: 12px;
+    overflow: hidden;
   }
 
   .sidebarOpen .filterWrap {
-    width: min(360px, 100%);
+    width: min(380px, 100%);
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    margin: 0;
     background: #f6f7fb;
-    padding: 16px;
+    padding: 14px;
     border-radius: 14px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
   }
 
   .filterTop {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
+    position: sticky;
+    top: -14px;
+    z-index: 2;
+    margin: -14px -14px 2px;
+    padding: 14px;
+    background: #f6f7fb;
+    border-bottom: 1px solid #e8e8e8;
   }
 
   .filterTop h3 {
@@ -546,6 +571,22 @@
 @media (max-width: 575px) {
   .page {
     padding: 24px 0;
+  }
+
+  .sidebarOpen {
+    padding: 10px;
+  }
+
+  .sidebarOpen .filterWrap {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    padding: 12px;
+  }
+
+  .filterTop {
+    top: -12px;
+    margin: -12px -12px 2px;
+    padding: 12px;
   }
 
   .container {

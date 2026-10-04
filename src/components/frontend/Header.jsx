@@ -1,6 +1,7 @@
 import styles from "./Header.module.css";
 import HeaderMobileDrawer from "./HeaderMobileDrawer";
 import HeaderCartIcon from "./HeaderCartIcon";
+import HeaderSearch from "./HeaderSearch";
 import { withCacheBust } from "@/lib/image-cache-bust";
 
 const fallbackMenu = [
@@ -147,14 +148,13 @@ export default function Header({ site = {}, baseUrl = "" }) {
           menu={menu}
           logo={logo}
           siteName={site.site_name || "Logo"}
-          searchAction={searchAction}
         />
 
         <a href="/" className={styles.logo} aria-label="Home">
           {logo ? (
             <img src={logo} alt={site.site_name || "Logo"} width={140} height={40} />
           ) : (
-            <span>Ponnobd</span>
+            <span>TheBrainBD</span>
           )}
         </a>
 
@@ -163,18 +163,7 @@ export default function Header({ site = {}, baseUrl = "" }) {
         </nav>
 
         <div className={styles.actions}>
-          <form action={searchAction} method="GET" className={styles.search}>
-            <input
-              type="text"
-              name="query"
-              className={styles.searchInput}
-              placeholder="Search"
-            />
-            <button type="submit" className={styles.searchBtn} aria-label="Search">
-              🔍
-            </button>
-          </form>
-
+          <HeaderSearch searchAction={searchAction} />
           <HeaderCartIcon />
         </div>
       </div>

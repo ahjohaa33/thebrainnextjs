@@ -29,6 +29,28 @@ function buildImageUrl(image) {
   return `${LARAVEL_ASSET_BASE_URL}/${cleanImage.replace(/^\/+/, '')}`;
 }
 
+function productHref(product = {}) {
+  const raw = String(product.url || product.slug || '').trim();
+  if (!raw) return '#';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return raw.startsWith('/') ? raw : `/${raw}`;
+}
+
+function parseBrandList(value) {
+  const unique = new Map();
+
+  String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .forEach((item) => {
+      const key = item.toLocaleLowerCase();
+      if (!unique.has(key)) unique.set(key, item);
+    });
+
+  return Array.from(unique.values());
+}
+
 export default function ShopView({ initialData = null }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -70,6 +92,7 @@ export default function ShopView({ initialData = null }) {
   const [loading, setLoading] = useState(initialData === null);
   const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
   const [message, setMessage] = useState(null);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   function updateUrl(nextFilters) {
     const params = new URLSearchParams();
@@ -203,6 +226,24 @@ export default function ShopView({ initialData = null }) {
   const initialDataConsumed = useRef(initialData !== null);
 
   useEffect(() => {
+    if (!mobileFilterOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setMobileFilterOpen(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileFilterOpen]);
+
+  useEffect(() => {
     setFilters(initialParams);
     setSearchInput(initialParams.query);
 
@@ -232,6 +273,57 @@ export default function ShopView({ initialData = null }) {
     filters.category_id,
   ]);
 
+  const selectedBrands = useMemo(
+    () => parseBrandList(filters.brand),
+    [filters.brand]
+  );
+
+  const selectedBrandKeys = useMemo(
+    () => new Set(selectedBrands.map((brand) => brand.toLocaleLowerCase())),
+    [selectedBrands]
+  );
+
+  const displayBrands = useMemo(() => {
+    const unique = new Map();
+
+    brands.forEach((brand) => {
+      const name = String(brand?.name ?? brand?.id ?? brand ?? '').trim();
+      if (!name) return;
+
+      unique.set(name.toLocaleLowerCase(), {
+        id: brand?.id ?? name,
+        name,
+      });
+    });
+
+    selectedBrands.forEach((name) => {
+      const key = name.toLocaleLowerCase();
+      if (!unique.has(key)) unique.set(key, { id: name, name });
+    });
+
+    return Array.from(unique.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    );
+  }, [brands, selectedBrands]);
+
+  function toggleBrand(brandName) {
+    const normalized = String(brandName || '').trim();
+    if (!normalized) return;
+
+    const key = normalized.toLocaleLowerCase();
+    const nextBrands = selectedBrandKeys.has(key)
+      ? selectedBrands.filter((brand) => brand.toLocaleLowerCase() !== key)
+      : [...selectedBrands, normalized];
+
+    applyFilters({
+      brand: nextBrands.join(','),
+    });
+  }
+
+  function clearBrandFilter() {
+    applyFilters({ brand: '' });
+  }
+
   const visiblePages = useMemo(() => {
     const current = Number(pagination.current_page || 1);
     const last = Number(pagination.last_page || 1);
@@ -248,8 +340,30 @@ export default function ShopView({ initialData = null }) {
       <section className={styles.archiveSection}>
         <div className={styles.container}>
           <div className={styles.layout}>
-            <aside className={styles.sidebar}>
-              <div className={styles.filterWrap}>
+            <aside
+              className={`${styles.sidebar} ${
+                mobileFilterOpen ? styles.sidebarOpen : ''
+              }`}
+              onClick={() => {
+                if (mobileFilterOpen) setMobileFilterOpen(false);
+              }}
+            >
+              <div
+                className={styles.filterWrap}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className={styles.filterTop}>
+                  <h2>Filters</h2>
+                  <button
+                    type="button"
+                    className={styles.closeFilter}
+                    onClick={() => setMobileFilterOpen(false)}
+                    aria-label="Close filters"
+                  >
+                    ×
+                  </button>
+                </div>
+
                 <div className={styles.filterGroup}>
                   <div className={styles.label}>
                     <span>Search Products</span>
@@ -368,33 +482,6 @@ export default function ShopView({ initialData = null }) {
                   </label>
                 </div>
 
-                {/* <div className={styles.filterGroup}>
-                  <div className={styles.label}>
-                    <span>Brand</span>
-                  </div>
-
-                  {brands.length > 0 ? (
-                    brands.map((brand) => (
-                      <label className={styles.filterItem} key={brand.id}>
-                        <input
-                          type="radio"
-                          name="brand"
-                          value={brand.id}
-                          checked={String(filters.brand) === String(brand.id)}
-                          onChange={() =>
-                            applyFilters({
-                              brand: brand.id,
-                            })
-                          }
-                        />
-                        <span>{brand.name}</span>
-                      </label>
-                    ))
-                  ) : (
-                    <p className={styles.muted}>No brands found.</p>
-                  )}
-                </div> */}
-
                 {categories.length > 0 && (
                   <div className={styles.filterGroup}>
                     <div className={styles.label}>
@@ -446,6 +533,14 @@ export default function ShopView({ initialData = null }) {
                     {pagination.total} product
                     {pagination.total === 1 ? '' : 's'} found
                   </p>
+
+                  <button
+                    type="button"
+                    className={styles.mobileFilterButton}
+                    onClick={() => setMobileFilterOpen(true)}
+                  >
+                    Filters
+                  </button>
                 </div>
 
                 <div className={styles.shortFilter}>
@@ -487,6 +582,46 @@ export default function ShopView({ initialData = null }) {
                 </div>
               </div>
 
+              {displayBrands.length > 0 ? (
+                <div className={styles.brandBar} aria-label="Filter products by brand">
+                  <div className={styles.brandPills}>
+                    <span className={styles.brandLabel}>Brand</span>
+
+                    <button
+                      type="button"
+                      className={`${styles.brandPill} ${
+                        selectedBrands.length === 0 ? styles.brandPillActive : ''
+                      }`}
+                      aria-pressed={selectedBrands.length === 0}
+                      onClick={clearBrandFilter}
+                    >
+                      All
+                    </button>
+
+                    {displayBrands.map((brand) => {
+                      const brandName = String(brand.name || brand.id || '').trim();
+                      const selected = selectedBrandKeys.has(brandName.toLocaleLowerCase());
+
+                      return (
+                        <button
+                          type="button"
+                          key={String(brand.id || brandName)}
+                          className={`${styles.brandPill} ${
+                            selected ? styles.brandPillActive : ''
+                          }`}
+                          aria-pressed={selected}
+                          onClick={() => toggleBrand(brandName)}
+                          title={brandName}
+                        >
+                          {selected ? '✓ ' : ''}
+                          {brandName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               {message && (
                 <div
                   className={`${styles.alert} ${
@@ -508,8 +643,7 @@ export default function ShopView({ initialData = null }) {
               ) : products.length > 0 ? (
                 <div className={styles.productGrid}>
                   {products.map((product) => {
-                    const productSlug = product.slug || product.url || '';
-                    const productUrl = productSlug ? `/${productSlug}` : '#';
+                    const productUrl = productHref(product);
 
                     const regularPrice = Number(product.price ?? 0);
                     const offerPrice = Number(product.offer_price ?? 0);

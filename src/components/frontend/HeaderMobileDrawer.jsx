@@ -146,7 +146,6 @@ export default function HeaderMobileDrawer({
   menu = [],
   logo = "",
   siteName = "Logo",
-  searchAction = "/shop",
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openMap, setOpenMap] = useState({});
@@ -196,7 +195,7 @@ export default function HeaderMobileDrawer({
             {logo ? (
               <img src={logo} alt={siteName} width={120} height={36} />
             ) : (
-              <span>Ponnobd</span>
+              <span>TheBrainBD</span>
             )}
           </a>
 
@@ -211,18 +210,6 @@ export default function HeaderMobileDrawer({
         </div>
 
         <div className={styles.drawerBody}>
-          <form action={searchAction} method="GET" className={styles.mobsearch}>
-            <input
-              type="text"
-              name="query"
-              className={styles.mobsearchInput}
-              placeholder="Search"
-            />
-            <button type="submit" className={styles.mobsearchBtn} aria-label="Search">
-              🔍
-            </button>
-          </form>
-
           <div className={styles.drawerMenu}>
             {menu.map((item, index) => (
               <MobileNode

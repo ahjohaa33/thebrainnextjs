@@ -48,7 +48,7 @@ export function resolveSiteUrl(override) {
   return value.replace(/\/+$/, "");
 }
 
-export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || "TheBrainbd Lifestyle";
+export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || "TheBrainBD";
 
 /**
  * Strip HTML tags + decode the handful of entities our CMS emits, then

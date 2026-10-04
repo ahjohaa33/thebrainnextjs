@@ -28,105 +28,101 @@ export function buildOrganizationSchema({ logo, sameAs = [] } = {}) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
+    alternateName: ["TheBrainBD", "The Brain BD"],
     url: SITE_URL,
     logo: logo || `${SITE_URL}/favicon.ico`,
+    description:
+      "TheBrainBD is a luxury lifestyle eCommerce store in Bangladesh focused on premium caps, headwear, fashion accessories and contemporary style.",
+    areaServed: {
+      "@type": "Country",
+      name: "Bangladesh",
+    },
+    knowsAbout: [
+      "Caps",
+      "Headwear",
+      "Fashion accessories",
+      "Lifestyle fashion",
+      "Street style",
+    ],
     sameAs: Array.isArray(sameAs) ? sameAs.filter(Boolean) : [],
   };
 }
 
-/* ─────────── LocalBusiness / ElectronicsStore ─────────── */
+/* ─────────── Luxury lifestyle / fashion eCommerce store ─────────── */
 
-export function buildElectronicsStoreSchema() {
+export function buildLifestyleStoreSchema() {
   return {
     "@context": "https://schema.org",
-    "@type": "ElectronicsStore",
-    "@id": `${SITE_URL}/#electronics-store`,
+    "@type": "OnlineStore",
+    "@id": `${SITE_URL}/#store`,
+    additionalType: "https://schema.org/ClothingStore",
     name: SITE_NAME,
-    alternateName: ["Ponnobd", "PonnoBD Electronics", "Ponnobd Electronics Dhaka"],
+    alternateName: ["TheBrainBD", "The Brain BD", "TheBrainBD Cap Store"],
     url: SITE_URL,
     logo: `${SITE_URL}/favicon.ico`,
     image: `${SITE_URL}/favicon.ico`,
     description:
-      "Ponnobd Electronics is an electronics shop in Bangladesh offering LED TVs, Smart TVs, ACs, home appliances, kitchen appliances, smartboards and electronics products with delivery support across Bangladesh.",
-    telephone: SALES_WHATSAPP_E164,
-    priceRange: "BDT",
-    currenciesAccepted: "BDT",
-    paymentAccepted: [
+      "TheBrainBD is a luxury lifestyle and fashion eCommerce store in Bangladesh specializing in premium caps, headwear, fashion accessories and modern street style.",
+    acceptedPaymentMethod: [
       "Cash on Delivery",
       "Cash",
       "Bank Transfer",
       "Mobile Banking",
-      "EMI"
     ],
     areaServed: {
       "@type": "Country",
-      name: "Bangladesh"
+      name: "Bangladesh",
     },
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Ponnobd Electronics, 48, Shewrapara (1st floor), Mirpur, Dhaka-1216",
-      addressLocality: "Dhaka",
-      addressRegion: "Dhaka",
-      postalCode: "1216",
-      addressCountry: "BD"
+    ...(SALES_WHATSAPP_E164
+      ? {
+          telephone: SALES_WHATSAPP_E164,
+          contactPoint: {
+            "@type": "ContactPoint",
+            telephone: SALES_WHATSAPP_E164,
+            contactType: "sales",
+            areaServed: "BD",
+            availableLanguage: ["English", "Bengali"],
+          },
+        }
+      : {}),
+    parentOrganization: {
+      "@id": `${SITE_URL}/#organization`,
     },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: "23.795665",
-      longitude: "90.372991"
-    },
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: [
-          "Saturday",
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday"
-        ],
-        opens: "10:00",
-        closes: "21:00"
-      }
+    knowsAbout: [
+      "Premium caps",
+      "Baseball caps",
+      "Adjustable caps",
+      "Headwear",
+      "Fashion accessories",
+      "Lifestyle fashion",
+      "Street style",
     ],
-    sameAs: [
-      "https://www.facebook.com/ponnobdelectronics",
-      "https://www.youtube.com/channel/UCQMdvHwn3rh11Q3ITYdjb-Q"
-    ],
-    makesOffer: [
-      {
-        "@type": "Offer",
-        itemOffered: {
-          "@type": "Product",
-          name: "LED TV"
-        }
-      },
-      {
-        "@type": "Offer",
-        itemOffered: {
-          "@type": "Product",
-          name: "Smart TV"
-        }
-      },
-      {
-        "@type": "Offer",
-        itemOffered: {
-          "@type": "Product",
-          name: "Air Conditioner"
-        }
-      },
-      {
-        "@type": "Offer",
-        itemOffered: {
-          "@type": "Product",
-          name: "Home Appliances"
-        }
-      }
-    ]
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Caps & Lifestyle Fashion",
+      itemListElement: [
+        {
+          "@type": "OfferCatalog",
+          name: "Caps & Headwear",
+        },
+        {
+          "@type": "OfferCatalog",
+          name: "Fashion Accessories",
+        },
+        {
+          "@type": "OfferCatalog",
+          name: "Lifestyle & Street Style",
+        },
+      ],
+    },
   };
 }
+
+// Backward-compatible alias for any code outside this partial source tree that
+// still imports the old builder name. The emitted schema is no longer electronics-specific.
+export const buildElectronicsStoreSchema = buildLifestyleStoreSchema;
 
 /* ─────────── BreadcrumbList ─────────── */
 
@@ -205,8 +201,8 @@ export function buildProductSchema(product = {}) {
       stripMeta(product.description, 5000) ||
       undefined,
     sku: product.sku || product.code || product.id ? String(product.sku || product.code || product.id) : undefined,
-    brand: product.brand?.name
-      ? { "@type": "Brand", name: product.brand.name }
+    brand: product.brand?.name || product.brand_name
+      ? { "@type": "Brand", name: product.brand?.name || product.brand_name }
       : undefined,
     image: images.length > 0 ? images : undefined,
     url,
@@ -217,6 +213,7 @@ export function buildProductSchema(product = {}) {
       price: Number(price).toFixed(2),
       availability,
       itemCondition: "https://schema.org/NewCondition",
+      seller: { "@id": `${SITE_URL}/#store` },
       // Google requires either priceValidUntil OR shippingDetails+returnPolicy
       // for full eligibility. We provide a 30-day rolling validity, which is
       // safe even when Laravel doesn't send a real expiry.
@@ -314,6 +311,7 @@ export function buildItemListSchema({ name, products = [], pathname = "/" }) {
                     ? "https://schema.org/InStock"
                     : "https://schema.org/OutOfStock",
                 itemCondition: "https://schema.org/NewCondition",
+                seller: { "@id": `${SITE_URL}/#store` },
               },
             }
           : {}),
@@ -540,6 +538,7 @@ export function buildWebsiteSchema() {
     "@type": "WebSite",
     name: SITE_NAME,
     url: SITE_URL,
+    publisher: { "@id": `${SITE_URL}/#organization` },
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/shop?query={search_term_string}`,

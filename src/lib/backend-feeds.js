@@ -19,7 +19,7 @@
 // This avoids Next.js Data Cache's per-entry size limitation while allowing
 // browsers and CDNs to cache the final public response through Cache-Control.
 
-const DEFAULT_LARAVEL_WEB_ORIGIN = "https://backend.ponnobd.com";
+const DEFAULT_LARAVEL_WEB_ORIGIN = "https://backend.thebrainbd.com";
 const FEED_TIMEOUT_MS = 30_000;
 
 const PUBLIC_FEED_CACHE =
@@ -33,11 +33,11 @@ const FALLBACK_BROWSER_USER_AGENT =
 /**
  * Convert a configured URL such as:
  *
- *   https://backend.ponnobd.com/api/v1
+ *   https://backend.thebrainbd.com/api/v1
  *
  * into:
  *
- *   https://backend.ponnobd.com
+ *   https://backend.thebrainbd.com
  */
 function normalizeOrigin(value) {
   if (!value) return "";
@@ -152,7 +152,7 @@ export function resolveLaravelWebOrigin(request = null) {
 
   throw new Error(
     "Laravel web origin is missing or resolves to the Next.js frontend. " +
-      "Set LARAVEL_WEB_URL=https://backend.ponnobd.com"
+      "Set LARAVEL_WEB_URL=https://backend.thebrainbd.com"
   );
 }
 

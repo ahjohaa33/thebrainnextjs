@@ -348,32 +348,7 @@ export const API_ENDPOINTS = [
     response: "Compatibility/no-op response in the current no-cache implementation.",
     notes: "Requires REVALIDATE_SECRET. The panel never exposes or probes this secret endpoint.",
   },
-  {
-    id: "youtube-channels",
-    layer: "external-unused",
-    status: "dormant",
-    group: "Dormant/external",
-    method: "GET",
-    path: "https://www.googleapis.com/youtube/v3/channels",
-    transport: "Next server → YouTube Data API",
-    safeProbe: false,
-    usedBy: ["src/lib/youtube.js"],
-    response: "YouTube channel metadata/uploads playlist.",
-    notes: "No current import/call site was found in the project; retained as dormant fallback code.",
-  },
-  {
-    id: "youtube-playlist-items",
-    layer: "external-unused",
-    status: "dormant",
-    group: "Dormant/external",
-    method: "GET",
-    path: "https://www.googleapis.com/youtube/v3/playlistItems",
-    transport: "Next server → YouTube Data API",
-    safeProbe: false,
-    usedBy: ["src/lib/youtube.js"],
-    response: "YouTube upload playlist videos.",
-    notes: "No current import/call site was found in the project; homepage videos come from Laravel /home.video_sections.",
-  },
+
 ];
 
 export function getApiEndpoint(id) {
