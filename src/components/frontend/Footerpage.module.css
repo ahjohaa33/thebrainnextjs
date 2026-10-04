@@ -3,12 +3,12 @@
   background:
     radial-gradient(
       circle at 10% 0%,
-      rgba(17, 24, 39, 0.42),
+      color-mix(in srgb, var(--theme-primary) 42%, transparent),
       transparent 28%
     ),
-    #050505;
+    var(--theme-footer-bg);
   color: #ffffff;
-  border-top: 1px solid #1c1c1c;
+  border-top: 1px solid var(--theme-footer-panel);
   overflow: hidden;
 }
 
@@ -102,9 +102,9 @@
 }
 
 .socialButton:hover {
-  color: #ffffff;
-  background: #111827;
-  border-color: yellow;
+  color: var(--theme-on-primary);
+  background: var(--theme-primary);
+  border-color: var(--theme-primary-soft);
   transform: translateY(-3px);
 }
 
@@ -137,7 +137,7 @@
   width: 30px;
   height: 2px;
   border-radius: 999px;
-  background: yellow;
+  background: var(--theme-primary);
 }
 
 /* ========================================
@@ -201,9 +201,9 @@
   width: 36px;
   height: 36px;
   margin-top: 1px;
-  border: 1px solid yellow;
+  border: 1px solid var(--theme-primary);
   border-radius: 10px;
-  background: rgba(17, 24, 39, 0.42);
+  background: color-mix(in srgb, var(--theme-primary) 42%, transparent);
   color: #ffffff;
 }
 

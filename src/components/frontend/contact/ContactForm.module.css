@@ -23,7 +23,7 @@
 }
 
 .required {
-  color: #e95b08;
+  color: var(--theme-primary);
 }
 
 .field input,
@@ -46,8 +46,8 @@
 
 .field input:focus,
 .field textarea:focus {
-  border-color: #e95b08;
-  box-shadow: 0 0 0 3px rgba(233, 91, 8, 0.12);
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 16%, transparent);
 }
 
 .field textarea {
@@ -76,8 +76,8 @@
   padding: 13px 28px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff7f1d, #e95b08);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-hover));
+  color: var(--theme-on-primary);
   font-weight: 800;
   font-size: 14.5px;
   cursor: pointer;
@@ -148,8 +148,8 @@
 }
 
 .secondaryBtn:hover {
-  border-color: #e95b08;
-  color: #e95b08;
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
 }
 
 @media (max-width: 640px) {

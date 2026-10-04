@@ -67,13 +67,13 @@
 }
 
 .postContent a {
-  color: #198754;
+  color: var(--theme-primary);
 }
 
 .postContent blockquote {
   margin: 18px 0;
   padding: 12px 18px;
-  border-left: 4px solid #198754;
+  border-left: 4px solid var(--theme-primary);
   background: #f1f5f9;
   color: #333;
 }
@@ -95,7 +95,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #198754;
+  color: var(--theme-primary);
   font-weight: 600;
   text-decoration: none;
   font-family: "Trebuchet MS", sans-serif;

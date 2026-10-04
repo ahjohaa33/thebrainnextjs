@@ -1,8 +1,12 @@
 .header {
-  --nx-bg: #ffffff;
-  --nx-fg: #0f172a;
-  --nx-border: #e5e7eb;
+  --nx-bg: var(--theme-header-bg);
+  --nx-fg: var(--theme-header-fg);
+  --nx-border: var(--theme-border);
   --nx-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --nx-menu-bg: var(--theme-nav-dropdown-bg, #ffffff);
+  --nx-menu-fg: var(--theme-nav-dropdown-fg, #111827);
+  --nx-menu-hover: var(--theme-nav-dropdown-hover, #f3f4f6);
+  --nx-menu-border: var(--theme-nav-dropdown-border, #e5e7eb);
   position: sticky;
   top: 0;
   z-index: 9999;
@@ -48,6 +52,7 @@
   width: auto;
   max-width: 140px;
   display: block;
+  filter: var(--theme-logo-filter);
 }
 
 .burger {
@@ -97,7 +102,14 @@
   gap: 6px;
   white-space: nowrap;
   border-radius: 8px;
-  color: #111827;
+}
+
+.navLink {
+  color: var(--theme-header-fg);
+}
+
+.submenuLink {
+  color: var(--nx-menu-fg);
 }
 
 .navLink {
@@ -112,9 +124,13 @@
   font-weight: 500;
 }
 
-.navLink:hover,
+.navLink:hover {
+  background: color-mix(in srgb, var(--theme-header-fg) 14%, transparent);
+}
+
 .submenuLink:hover {
-  background: #f3f4f6;
+  background: var(--nx-menu-hover);
+  color: var(--nx-menu-fg);
 }
 
 .submenu {
@@ -122,8 +138,9 @@
   top: 100%;
   left: 0;
   min-width: 230px;
-  background: #fff;
-  border: 1px solid var(--nx-border);
+  background: var(--nx-menu-bg);
+  color: var(--nx-menu-fg);
+  border: 1px solid var(--nx-menu-border);
   border-radius: 12px;
   padding: 8px;
   box-shadow: var(--nx-shadow);
@@ -391,7 +408,7 @@
   padding: 0 10px;
 }
 
-.cartIcon {
+.header .cartIcon {
   position: relative;
   width: 42px;
   height: 42px;
@@ -399,21 +416,28 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #ffffff;
-  color: #1f2937;
+  background: #ffffff !important;
+  color: #111827 !important;
   text-decoration: none;
+  isolation: isolate;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
   border: 1px solid rgba(15, 23, 42, 0.08);
   transition: all 0.25s ease;
 }
 
-.cartIcon i {
+.header .cartIcon i {
   font-size: 18px;
   line-height: 1;
 }
 
-.cartIcon:hover {
-  color: #0f172a;
+.header .cartIcon svg {
+  color: #111827 !important;
+  stroke: #111827 !important;
+}
+
+.header .cartIcon:hover {
+  color: #111827 !important;
+  background: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
 }
@@ -449,13 +473,14 @@
   inset: 0 auto 0 0;
   width: 85%;
   max-width: 360px;
-  background: #fff;
+  background: var(--nx-menu-bg);
+  color: var(--nx-menu-fg);
   transform: translateX(-100%);
   transition: transform 0.25s ease;
   display: flex;
   flex-direction: column;
   z-index: 80;
-  border-right: 1px solid var(--nx-border);
+  border-right: 1px solid var(--nx-menu-border);
 }
 
 .drawerOpen {
@@ -468,7 +493,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  border-bottom: 1px solid var(--nx-border);
+  border-bottom: 1px solid var(--nx-menu-border);
 }
 
 .drawerLogo {
@@ -481,6 +506,7 @@
   height: 32px;
   width: auto;
   display: block;
+  filter: var(--theme-logo-filter);
 }
 
 .drawerClose {
@@ -491,12 +517,12 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background: #f3f4f6;
+  background: color-mix(in srgb, var(--nx-menu-fg) 12%, transparent);
   border: 0;
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
-  color: #111827;
+  color: var(--nx-menu-fg);
 }
 
 .drawerBody {
@@ -510,7 +536,7 @@
 }
 
 .dmItem {
-  border: 1px solid var(--nx-border);
+  border: 1px solid var(--nx-menu-border);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -519,7 +545,8 @@
   width: 100%;
   text-align: left;
   padding: 12px 14px;
-  background: #f9fafb;
+  background: var(--nx-menu-bg);
+  color: var(--nx-menu-fg);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -540,19 +567,22 @@
   padding: 8px;
   display: grid;
   gap: 6px;
+  background: var(--nx-menu-bg);
+  color: var(--nx-menu-fg);
 }
 
 .dmLink {
   display: block;
   padding: 10px 12px;
   border-radius: 10px;
-  color: #111827;
-  border: 1px solid var(--nx-border);
-  background: #fff;
+  color: var(--nx-menu-fg);
+  border: 1px solid var(--nx-menu-border);
+  background: var(--nx-menu-bg);
 }
 
 .dmLink:hover {
-  background: #f3f4f6;
+  background: var(--nx-menu-hover);
+  color: var(--nx-menu-fg);
 }
 
 .overlay {
@@ -621,7 +651,7 @@
     height: 38px;
   }
 
-  .cartIcon {
+  .header .cartIcon {
     width: 40px;
     height: 40px;
   }

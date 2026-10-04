@@ -4,7 +4,7 @@
 .page {
   width: 100%;
   padding: 24px 0 48px;
-  background: #fff;
+  background: var(--theme-page-bg);
 }
 
 .container {
@@ -118,7 +118,7 @@
 
 .thumbBtn:hover,
 .thumbBtnActive {
-  border-color: #111827;
+  border-color: var(--theme-primary);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
@@ -274,21 +274,21 @@
 }
 
 .primaryBtn {
-  background: #16a34a;
-  color: #fff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
 }
 
 .primaryBtn:hover {
-  background: #15803d;
+  background: var(--theme-primary-hover);
 }
 
 .secondaryBtn {
-  background: #111827;
-  color: #fff;
+  background: var(--theme-primary-hover);
+  color: var(--theme-on-primary);
 }
 
 .secondaryBtn:hover {
-  background: #000;
+  background: var(--theme-primary);
 }
 
 /* =========================
@@ -461,9 +461,9 @@
 
 .tabBtn:hover,
 .tabBtnActive {
-  background: #111827;
-  color: #fff;
-  border-color: #111827;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+  border-color: var(--theme-primary);
 }
 
 .tabContent {
@@ -606,8 +606,8 @@
 
 .reviewToggleBtn {
   padding: 12px 18px;
-  background: #1f2937;
-  color: #fff;
+  background: var(--theme-primary-hover);
+  color: var(--theme-on-primary);
   border: 0;
   border-radius: 10px;
   font-weight: 700;
@@ -676,8 +676,8 @@
 
 .submitBtn {
   padding: 12px 18px;
-  background: #16a34a;
-  color: #fff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
   border: 0;
   border-radius: 10px;
   font-weight: 700;

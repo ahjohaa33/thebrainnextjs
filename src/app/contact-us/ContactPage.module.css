@@ -51,12 +51,12 @@
 }
 
 .callBtn {
-  background: #fdece0;
-  color: #e95b08;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
 }
 
 .callBtn:hover {
-  background: #fbdcc4;
+  background: var(--theme-section-alt);
 }
 
 .whatsappBtn {

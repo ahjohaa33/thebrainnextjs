@@ -1,6 +1,6 @@
 .page {
   width: 100%;
-  background: #ffffff;
+  background: var(--theme-page-bg);
 }
 
 .container {
@@ -10,7 +10,7 @@
 
 .breadcrumbSection {
   padding: 80px 0;
-  background: #f8fafc;
+  background: var(--theme-section-bg);
 }
 
 .breadcrumbWrapper {
@@ -149,7 +149,7 @@
 .quantityBox {
   width: 116px;
   min-height: 42px;
-  border: 1px solid #16a34a;
+  border: 1px solid var(--theme-primary);
   border-radius: 8px;
   display: flex;
   justify-content: center;
@@ -224,8 +224,8 @@
   width: 100%;
   min-height: 52px;
   border-radius: 10px;
-  background: #16a34a;
-  color: #fff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -236,7 +236,7 @@
 }
 
 .checkoutBtn:hover {
-  background: #15803d;
+  background: var(--theme-primary-hover);
 }
 
 .empty {

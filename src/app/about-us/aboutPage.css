@@ -7,7 +7,7 @@
 body {
   margin: 0;
   font-family: "Inter", Arial, sans-serif;
-  background: #ffffff;
+  background: var(--theme-content-bg);
   color: #151515;
   overflow-x: hidden;
 }
@@ -23,8 +23,8 @@ body {
 .about-hero {
   position: relative;
   min-height: 260px;
-  background: #000000;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
   border-bottom-left-radius: 50% 24px;
   border-bottom-right-radius: 50% 24px;
   overflow: hidden;
@@ -37,7 +37,7 @@ body {
   right: -5%;
   bottom: -22px;
   height: 55px;
-  background: #ffffff;
+  background: var(--theme-content-bg);
   border-radius: 50% 50% 0 0;
   transform: rotate(-1deg);
 }
@@ -60,11 +60,11 @@ body {
 .about-breadcrumb {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  color: color-mix(in srgb, var(--theme-on-primary) 80%, transparent);
 }
 
 .about-breadcrumb span {
-  color: #ffffff;
+  color: var(--theme-on-primary);
   margin: 0 7px;
 }
 
@@ -88,8 +88,8 @@ body {
   margin-bottom: 16px;
   padding: 9px 18px;
   border-radius: 999px;
-  background: black;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
   font-size: 13px;
   font-weight: 700;
   box-shadow: 0 14px 28px rgba(233, 91, 8, 0.22);
@@ -229,7 +229,7 @@ body {
 
 .about-message-section {
   padding: 90px 20px;
-  background: #ffffff;
+  background: var(--theme-section-bg);
 }
 
 .about-message-container {
@@ -273,7 +273,7 @@ body {
   width: 4px;
   height: 54px;
   border-radius: 0 10px 10px 0;
-  background: black;
+  background: var(--theme-primary);
   z-index: 2;
   transition: background 0.35s ease, width 0.35s ease;
 }

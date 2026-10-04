@@ -5,8 +5,8 @@
 .hero {
   position: relative;
   min-height: 200px;
-  background: #000000;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
   border-bottom-left-radius: 50% 18px;
   border-bottom-right-radius: 50% 18px;
   overflow: hidden;
@@ -20,7 +20,7 @@
   right: -5%;
   bottom: -18px;
   height: 45px;
-  background: #ffffff;
+  background: var(--theme-content-bg);
   border-radius: 50% 50% 0 0;
   transform: rotate(-1deg);
 }
@@ -39,8 +39,8 @@
   margin-bottom: 16px;
   padding: 8px 16px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff7f1d, #e95b08);
-  color: #ffffff;
+  background: color-mix(in srgb, var(--theme-on-primary) 18%, transparent);
+  color: var(--theme-on-primary);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -58,7 +58,7 @@
 .heroSubtitle {
   margin: 0 auto 18px;
   max-width: 560px;
-  color: rgba(255, 255, 255, 0.82);
+  color: color-mix(in srgb, var(--theme-on-primary) 82%, transparent);
   font-size: 15px;
   line-height: 1.6;
   font-weight: 500;
@@ -70,11 +70,11 @@
   gap: 7px;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--theme-on-primary) 75%, transparent);
 }
 
 .breadcrumb a {
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--theme-on-primary) 75%, transparent);
 }
 
 .breadcrumb a:hover {
@@ -82,14 +82,14 @@
 }
 
 .breadcrumb [aria-current="page"] {
-  color: #ffffff;
+  color: var(--theme-on-primary);
   font-weight: 700;
 }
 
 /* ── Page shell ───────────────────────────────────────────────────── */
 
 .page {
-  background: #ffffff;
+  background: var(--theme-content-bg);
 }
 
 .layout {
@@ -142,7 +142,7 @@
 }
 
 .toc a:hover {
-  color: #e95b08;
+  color: var(--theme-primary);
 }
 
 .updated {
@@ -189,8 +189,8 @@
   height: 26px;
   flex: none;
   border-radius: 8px;
-  background: #fdece0;
-  color: #e95b08;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
   font-size: 12px;
   font-weight: 800;
 }
@@ -220,7 +220,7 @@
 }
 
 .content a {
-  color: #e95b08;
+  color: var(--theme-primary);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -321,7 +321,7 @@
 
 .accordionIcon {
   flex: none;
-  color: #e95b08;
+  color: var(--theme-primary);
   font-size: 18px;
   line-height: 1;
 }
@@ -338,8 +338,8 @@
   margin-top: 40px;
   padding: 22px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #2f1684, #5126b9);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-hover));
+  color: var(--theme-on-primary);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -360,7 +360,7 @@
   padding: 11px 20px;
   border-radius: 999px;
   background: #ffffff;
-  color: #2f1684;
+  color: var(--theme-primary);
   font-weight: 800;
   font-size: 14px;
   white-space: nowrap;

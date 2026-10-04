@@ -1,5 +1,5 @@
 .pageRoot {
-  background: #ffffff;
+  background: var(--theme-home-bg);
   color: #111827;
 }
 
@@ -10,7 +10,7 @@
 
 .hero {
   padding: 10px 0 2px;
-  background: #ffffff;
+  background: var(--theme-home-bg);
 }
 
 .heroGrid {
@@ -124,7 +124,7 @@
 
 .homeMediaArea {
   padding: 8px 0 8px;
-  background: #fdfdfd;
+  background: var(--theme-section-bg);
 
 }
 
@@ -180,7 +180,7 @@
 
 .eyebrow {
   display: inline-flex;
-  color: #0785a5;
+  color: var(--theme-primary);
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
@@ -215,9 +215,9 @@
 
 .topSliderControls button:hover,
 .floatingArrow:hover {
-  color: #ffffff;
-  background: #079bc3;
-  border-color: #079bc3;
+  color: var(--theme-on-primary);
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
   transform: translateY(-1px);
 }
 
@@ -376,7 +376,7 @@
 
 .litePlayButton:hover .litePlayIcon,
 .litePlayButton:focus-visible .litePlayIcon {
-  background: #079bc3;
+  background: var(--theme-primary);
   transform: translate(-50%, -50%) scale(1.06);
 }
 
@@ -398,7 +398,7 @@
 }
 
 .featuredVideoMeta span {
-  color: #0688aa;
+  color: var(--theme-primary);
 }
 
 .featuredVideoTitleRow {
@@ -453,7 +453,7 @@
 
 .carouselDots span[data-active="true"] {
   width: 24px;
-  background: #079bc3;
+  background: var(--theme-primary);
 }
 
 .galleryToolbar {
@@ -501,13 +501,13 @@
 
 .filterTab:hover,
 .filterTab[aria-selected="true"] {
-  color: #ffffff;
-  background: #111827;
-  border-color: #111827;
+  color: var(--theme-on-primary);
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
 }
 
 .filterTab[aria-selected="true"] span {
-  color: #ffffff;
+  color: var(--theme-on-primary);
 }
 
 .galleryLinkButton {
@@ -518,20 +518,20 @@
   gap: 7px;
   min-height: 38px;
   padding: 7px 13px;
-  color: #087d9d;
+  color: var(--theme-primary);
   font-size: 12px;
   font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
   background: #ffffff;
-  border: 1px solid #079bc3;
+  border: 1px solid var(--theme-primary);
   border-radius: 999px;
   transition: color 0.18s ease, background 0.18s ease;
 }
 
 .galleryLinkButton:hover {
-  color: #ffffff;
-  background: #079bc3;
+  color: var(--theme-on-primary);
+  background: var(--theme-primary);
 }
 
 .galleryMark {
@@ -545,8 +545,8 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  color: #ffffff;
-  background: #06baf1;
+  color: var(--theme-on-primary);
+  background: var(--theme-primary);
   border-radius: 999px;
 }
 
@@ -637,6 +637,11 @@
 /* Existing product sections */
 .section {
   padding: 24px 0;
+  background: var(--theme-section-bg);
+}
+
+.section:nth-of-type(even) {
+  background: var(--theme-primary-faint);
 }
 
 .sectionHeader {
@@ -941,8 +946,8 @@
 
 .homeContentCard {
   padding: clamp(20px, 3vw, 32px);
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-primary-faint);
+  border: 1px solid var(--theme-border);
   border-radius: 14px;
 }
 
@@ -987,8 +992,8 @@
   min-height: 42px;
   margin-top: 18px;
   padding: 10px 18px;
-  color: #ffffff;
-  background: #111827;
+  color: var(--theme-on-primary);
+  background: var(--theme-primary);
   border: 0;
   border-radius: 8px;
   font-size: 14px;

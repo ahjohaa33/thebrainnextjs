@@ -1,0 +1,287 @@
+.panel {
+  position: fixed;
+  top: 50%;
+  z-index: 9000;
+  width: min(276px, calc(100vw - 8px));
+  max-height: min(500px, calc(100dvh - 20px));
+  transform: translateY(-50%);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.985);
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 14px 38px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(14px);
+  transition: width 160ms ease, left 160ms ease, right 160ms ease,
+    border-radius 160ms ease, box-shadow 160ms ease;
+  isolation: isolate;
+}
+
+.panel[data-side="left"] {
+  left: 0;
+  right: auto;
+  border-radius: 0 14px 14px 0;
+  border-left: 0;
+}
+
+.panel[data-side="right"] {
+  right: 0;
+  left: auto;
+  border-radius: 14px 0 0 14px;
+  border-right: 0;
+}
+
+.panel.collapsed {
+  width: 42px;
+  height: 62px;
+  max-height: none;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18);
+}
+
+.dragHandle {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 42px 7px 10px;
+  background: var(--theme-primary, #111827);
+  color: var(--theme-on-primary, #ffffff);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragDots {
+  letter-spacing: 1px;
+  opacity: 0.62;
+  transform: rotate(90deg);
+  font-size: 9px;
+}
+
+.dragHandle strong {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.currentDot {
+  width: 14px;
+  height: 14px;
+  margin-left: auto;
+  border: 2px solid rgba(255, 255, 255, 0.76);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+}
+
+.collapseButton {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 29px;
+  height: 29px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--theme-on-primary, #ffffff);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.themeIcon {
+  width: 17px;
+  height: 17px;
+}
+
+/* The minimized control is intentionally a tiny edge tab: a narrow
+   drag grip at the top and one theme button below it. */
+.collapsed .dragHandle {
+  position: absolute;
+  inset: 0 0 auto;
+  min-height: 20px;
+  height: 20px;
+  padding: 0;
+  justify-content: center;
+  background: var(--theme-primary, #111827);
+}
+
+.collapsed .dragDots {
+  display: block;
+  transform: none;
+  font-size: 8px;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.collapsed .dragHandle strong,
+.collapsed .currentDot {
+  display: none;
+}
+
+.collapsed .collapseButton {
+  top: 24px;
+  left: 5px;
+  right: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border-color: rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+.content {
+  max-height: calc(min(500px, 100dvh - 20px) - 42px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+  scrollbar-width: thin;
+}
+
+.headingRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.headingRow p {
+  margin: 2px 0 0;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.eyebrow {
+  display: block;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.resetButton {
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 8px;
+  background: var(--theme-primary-soft, #eef2ff);
+  color: #111827;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.palette {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.swatch {
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.13);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.swatch:hover,
+.swatch:focus-visible {
+  z-index: 1;
+  transform: scale(1.2);
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px rgba(15, 23, 42, 0.34);
+}
+
+.swatch.selected {
+  z-index: 1;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #0f172a;
+}
+
+.customRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.customControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customControl input {
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.customControl code {
+  color: #334155;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+
+@media (max-width: 575px) {
+  .panel {
+    width: min(258px, calc(100vw - 6px));
+    max-height: min(450px, calc(100dvh - 16px));
+  }
+
+  .panel.collapsed {
+    width: 40px;
+    height: 58px;
+  }
+
+  .collapsed .collapseButton {
+    top: 22px;
+    left: 4px;
+    width: 31px;
+    height: 31px;
+  }
+
+  .content {
+    max-height: calc(min(450px, 100dvh - 16px) - 42px);
+    padding: 10px;
+  }
+
+  .palette {
+    gap: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .swatch {
+    transition: none;
+  }
+}
+
+.dragging {
+  transition: none;
+}

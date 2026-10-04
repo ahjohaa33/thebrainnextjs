@@ -6,6 +6,7 @@ import { LARAVEL_BASE_URL } from "@/lib/config";
 import Providers from "./providers";
 import Footer from "@/components/frontend/Footer";
 import FloatingWhatsApp from "@/components/frontend/FloatingWhatsApp";
+import ThemeSwatcher from "@/components/frontend/ThemeSwatcher";
 import PwaInstaller from "@/components/frontend/PwaInstaller";
 import Analytics, { GtmNoscript } from "@/components/Analytics";
 import EngagementTracker from "@/components/EngagementTracker";
@@ -91,6 +92,7 @@ export default async function RootLayout({ children }) {
 
         <Providers>{children}</Providers>
         <Footer />
+        <ThemeSwatcher />
 
         {/*
           Site-wide floating WhatsApp button. Fixed to the bottom-right,

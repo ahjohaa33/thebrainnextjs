@@ -28,7 +28,7 @@
     --body-color: 0, 0%, 100%;
     --border-color: 0 0% 88%;
     --background: 0, 0%, 97%;
-    --footer-bg: 36, 76%, 10%;
+    --footer-bg: var(--theme-footer-hsl);
     --border-radius: 16px;
     --border-radius-sm: 4px;
     --lemon-light: 164, 60%, 90%;
@@ -48,7 +48,7 @@
     --card-bg: hsl(240, 1%, 15%);
     --section-bg: hsl(240, 1%, 15%);
     --header-bg: hsl(240, 1%, 15%);
-    --footer-bg: 0,0%,97%;
+    --footer-bg: var(--theme-footer-hsl);
     --base-light-h: 152;
     --base-light-s: 100%;
     --base-light-l: 50%;
@@ -57,9 +57,9 @@
     --base-component-s: 100%;
     --base-component-l: 17%;
     --base-component: var(--base-component-h) var(--base-component-s) var(--base-component-l);
-    --base-h: 232;
-    --base-s: 57%;
-    --base-l: 34%;
+    --base-h: var(--theme-hue);
+    --base-s: var(--theme-saturation);
+    --base-l: var(--theme-lightness);
     --base: var(--base-h) var(--base-s) var(--base-l);
     --base-d-100: var(--base-h) var(--base-s) calc(var(--base-l) - var(--base-l) * 0.1);
     --base-d-200: var(--base-h) var(--base-s) calc(var(--base-l) - var(--base-l) * 0.2);

@@ -22,8 +22,8 @@
   border: 0;
   border-radius: 999px;
   padding: 10px 16px;
-  background: #111827;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
   font-weight: 700;
   font-size: 14px;
   line-height: 1.2;
@@ -32,6 +32,7 @@
 }
 
 .installBtn:hover {
+  background: var(--theme-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(17, 24, 39, 0.34);
 }
@@ -41,7 +42,7 @@
 }
 
 .installBtn:focus-visible {
-  outline: 2px solid #111827;
+  outline: 2px solid var(--theme-primary);
   outline-offset: 2px;
 }
 

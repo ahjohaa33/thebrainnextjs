@@ -55,8 +55,8 @@
 
   max-width: 100%;
 
-  background: #111827;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
 
   border-radius: 999px;
 
@@ -313,8 +313,8 @@
 
   padding: 10px 14px;
 
-  background: #111827;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
 
   border: 0;
   border-radius: 8px;

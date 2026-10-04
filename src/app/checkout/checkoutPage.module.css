@@ -1,6 +1,6 @@
 .checkoutPage {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: var(--theme-page-bg);
 }
 
 /* ── Breadcrumb ─────────────────────────────────────────────── */
@@ -135,7 +135,7 @@
 
 .checkRow input[type="checkbox"] {
   margin-top: 3px;
-  accent-color: #111827;
+  accent-color: var(--theme-primary);
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -258,12 +258,12 @@
 }
 
 .shippingOption.selected {
-  border-color: #111827;
+  border-color: var(--theme-primary);
   background: #f8fafc;
 }
 
 .shippingOption input[type="radio"] {
-  accent-color: #111827;
+  accent-color: var(--theme-primary);
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -314,8 +314,8 @@
   display: block;
   width: 100%;
   padding: 14px;
-  background: #111827;
-  color: #fff;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
   font-size: 1rem;
   font-weight: 700;
   border: none;
@@ -327,7 +327,7 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: #1f2937;
+  background: var(--theme-primary-hover);
 }
 
 .submitBtn:active:not(:disabled) {
@@ -378,11 +378,11 @@
 
 /* ── Checkout banner (replaces broken image) ─────────────────── */
 .checkoutBanner {
-  background: linear-gradient(135deg, #111827 0%, #111827 100%);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%);
   border-radius: 10px;
   padding: 18px 24px;
   margin-bottom: 20px;
-  color: #fff;
+  color: var(--theme-on-primary);
 }
 
 .checkoutBannerInner {
