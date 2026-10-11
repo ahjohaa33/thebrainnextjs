@@ -139,7 +139,23 @@ export default function Header({ site = {}, baseUrl = "" }) {
     site.updated_at
   );
   const searchAction = site.search_action || "/shop";
-  const menu = Array.isArray(site.menu) && site.menu.length ? site.menu : fallbackMenu;
+  const baseMenu = Array.isArray(site.menu) && site.menu.length ? site.menu : fallbackMenu;
+  const hasNewArrivals = baseMenu.some(
+    (item) =>
+      String(item?.label || "").trim().toLowerCase() === "new arrivals" ||
+      item?.href === "/#new-arrivals"
+  );
+  const shopIndex = baseMenu.findIndex(
+    (item) => item?.href === "/shop" || String(item?.label || "").trim().toLowerCase() === "shop"
+  );
+  const insertAt = shopIndex >= 0 ? shopIndex + 1 : 0;
+  const menu = hasNewArrivals
+    ? baseMenu
+    : [
+        ...baseMenu.slice(0, insertAt),
+        { label: "New Arrivals", href: "/#new-arrivals" },
+        ...baseMenu.slice(insertAt),
+      ];
 
   return (
     <header className={styles.header} role="banner">

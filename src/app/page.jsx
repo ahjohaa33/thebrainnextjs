@@ -208,6 +208,33 @@ export default async function Page() {
           </section>
         )}
 
+        {home.new_arrivals.length > 0 ? (
+          <div id="new-arrivals" style={{ scrollMarginTop: 64 }}>
+            <section
+              className={styles.section}
+              aria-labelledby="new-arrivals-heading"
+            >
+              <div className={styles.container}>
+                <div className={styles.sectionHeader}>
+                  <h2 id="new-arrivals-heading">New Arrivals</h2>
+                </div>
+
+                <div className={styles.productGrid}>
+                  {home.new_arrivals.map((product, productIndex) => (
+                    <ProductBox
+                      key={product.id || `new-arrival-${productIndex}`}
+                      product={product}
+                      baseUrl={LARAVEL_BASE_URL}
+                      listName="New Arrivals"
+                      listIndex={productIndex + 1}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
+        ) : null}
+
         {/* Client component: lite thumbnails + single real iframe (gallery only) */}
         <HomeMediaSections
           mediaVideos={mediaVideos}

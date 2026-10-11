@@ -165,6 +165,11 @@ export function normalizeHomePayload(data = {}) {
         normalizeProduct(product, productIndex)
       ),
     })),
+    // Backend returns newest-first; use the same product-card normalization as
+    // the existing homepage sections, capped defensively at 24 products.
+    new_arrivals: normalizeArray(data?.new_arrivals)
+      .slice(0, 24)
+      .map((product, index) => normalizeProduct(product, index)),
     // Passed through as-is (raw shape from the Laravel API: id, title,
     // video_id, embed_url, watch_url, thumbnail, type, order, ...).
     // page.jsx's normalizeVideos() is what maps this into the shape the
