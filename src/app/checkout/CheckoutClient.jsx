@@ -625,7 +625,7 @@ export default function CheckoutClient() {
                   <label className={styles.checkLabel} htmlFor="terms">
                     I have read and agree to the{" "}
                     <Link href="/terms-and-conditions" target="_blank">Terms &amp; Conditions</Link>{" "}
-                    of {process.env.NEXT_PUBLIC_SITE_NAME || "Ponnobd"}.
+                    of {process.env.NEXT_PUBLIC_SITE_NAME || "thebrainbd"}.
                   </label>
                 </div>
 

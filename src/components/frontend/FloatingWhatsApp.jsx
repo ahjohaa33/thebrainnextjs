@@ -17,7 +17,7 @@ import { SALES_WHATSAPP_DIGITS, SALES_WHATSAPP_E164 } from "@/lib/config";
  * needed here.
  */
 export default function FloatingWhatsApp() {
-  const greeting = "Hi! I have a question about a product on Ponnobd.";
+  const greeting = "Hi! I have a question about a product on thebrainbd.";
   const href = `https://wa.me/${SALES_WHATSAPP_DIGITS}?text=${encodeURIComponent(
     greeting
   )}`;
