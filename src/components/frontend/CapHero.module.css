@@ -257,7 +257,7 @@
   margin: 0;
   overflow-wrap: anywhere;
   font-family: Inter, Arial, Helvetica, sans-serif;
-  font-size: clamp(20px, 2.1vw, 34px);
+  font-size: clamp(20px, 1.9vw, 22px);
   font-weight: 500;
   line-height: 1.16;
   letter-spacing: -0.015em;
@@ -277,8 +277,9 @@
 }
 
 .subtitle {
-  margin: 5px 0 9px;
-  font-size: clamp(10px, 0.75vw, 13px);
+  margin: 10px 0 12px;
+  font-size: clamp(22px, 0.75vw, 28px);
+  font-weight: 600;
 }
 
 .cta {
@@ -420,7 +421,7 @@
   }
 
   .copy h1 {
-    font-size: clamp(20px, 5vw, 28px);
+    font-size: clamp(18px, 4.6vw, 26px);
   }
 
   .controls {
@@ -430,7 +431,7 @@
 
 @media (max-height: 680px) and (min-width: 761px) {
   .copy h1 {
-    font-size: clamp(20px, 2vw, 30px);
+    font-size: clamp(18px, 1.8vw, 26px);
   }
 }
 

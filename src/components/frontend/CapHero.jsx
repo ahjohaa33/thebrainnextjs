@@ -302,7 +302,7 @@ export default function CapHero({ slides = [] }) {
           </p>
           <h1 key={`title-${active}`}>{activeItem.name}</h1>
           <p className={styles.subtitle}>
-            {activeItem.model} · {activeItem.price_formatted}
+           {activeItem.price_formatted}
           </p>
           <a className={styles.cta} href={activeItem.url || "#"}>
             SEE MORE
