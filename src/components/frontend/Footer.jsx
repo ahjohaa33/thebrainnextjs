@@ -3,7 +3,7 @@ import styles from "./Footerpage.module.css";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { getFooterData, normalizePhoneForTel } from "@/lib/footer-data";
 
-const INTERNAL_DOMAINS = new Set(["ponnobd.com"]);
+const INTERNAL_DOMAINS = new Set(["ponnobd.com", "thebrainbd.com"]);
 
 const LEGACY_PAGE_SLUG_MAP = {
   "terms-and-conditions": "terms-and-conditions",

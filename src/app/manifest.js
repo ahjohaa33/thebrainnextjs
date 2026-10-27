@@ -1,8 +1,8 @@
 export default function manifest() {
   return {
-    name: "Ponnobd Electronics",
-    short_name: "Ponnobd",
-    description: "Ponnobd Electronics app",
+    name: "The Brain BD",
+    short_name: "The Brain BD",
+    description: "The Brain BD app",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -15,19 +15,19 @@ export default function manifest() {
         type: "image/x-icon",
       },
       {
-        src: "/icon-192.png",
+        src: "/icons/icon-192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon-512.png",
+        src: "/icons/icon-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon-512-maskable.png",
+        src: "/icons/icon-512-maskable.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

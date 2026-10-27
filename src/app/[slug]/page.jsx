@@ -1,12 +1,11 @@
 import { cache } from "react";
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import { apiUrl, LARAVEL_BASE_URL } from "@/lib/config";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import ProductPage from "@/components/frontend/slug/ProductPage";
 import CategoryPage from "@/components/frontend/slug/CategoryPage";
 import JsonLd from "@/components/seo/JsonLd";
-import { buildMetadata, shouldNoindex } from "@/lib/seo";
+import { buildMetadata, shouldNoindex, SITE_URL } from "@/lib/seo";
 import {
   buildBreadcrumbSchema,
   buildProductSchema,
@@ -19,29 +18,6 @@ import {
 // via revalidateTag("product") or revalidateTag("category") surfaces
 // CMS changes immediately without waiting for the TTL.
 export const revalidate = 300;
-
-/**
- * Derive the public site URL from the incoming request's Host header.
- *
- * This is what makes domain moves zero-config: when the app runs on
- * developer.ponnobd.com today the response carries that host; when you
- * cut over to ponnobd.com later, the same code emits the new host with
- * no env change. Falls back to `null` if the header is absent (e.g.
- * during static generation), letting buildMetadata use its env default.
- */
-async function getSiteUrlFromRequest() {
-  try {
-    const h = await headers();
-    const host = h.get("x-forwarded-host") || h.get("host");
-    if (!host) return null;
-    const proto =
-      h.get("x-forwarded-proto") ||
-      (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
-    return `${proto}://${host}`;
-  } catch {
-    return null;
-  }
-}
 
 function normalizeSearchParams(input) {
   if (!input || typeof input !== "object") return {};
@@ -100,7 +76,7 @@ export async function generateMetadata(props) {
   const currentSearchParams = normalizeSearchParams(searchParams);
   if (!slug) return {};
 
-  const detectedSiteUrl = await getSiteUrlFromRequest();
+  const detectedSiteUrl = SITE_URL;
 
   const data = await getSlugData(slug, stableKey(currentSearchParams));
   if (!data || data.redirect_to || data.type === "error") {
@@ -152,30 +128,11 @@ export default async function SlugPage(props) {
   const slug = params?.slug;
   const currentSearchParams = normalizeSearchParams(searchParams);
 
-  if (!slug) {
-    return (
-      <>
-        <SiteHeader />
-        <main style={{ padding: "40px 20px" }}>
-          <h1>Page not found</h1>
-        </main>
-      </>
-    );
-  }
+  if (!slug) notFound();
 
   const data = await getSlugData(slug, stableKey(currentSearchParams));
 
-  if (!data) {
-    return (
-      <>
-        <SiteHeader />
-        <main style={{ padding: "40px 20px" }}>
-          <h1>Page not found</h1>
-          <p>No product or category matched this slug.</p>
-        </main>
-      </>
-    );
-  }
+  if (!data) notFound();
 
   if (data.type === "error") {
     return (

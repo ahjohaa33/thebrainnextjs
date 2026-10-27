@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiRequest, API_BASE_URL } from '@/lib/api';
 import styles from './shopPage.module.css';
+import { buildShopQuery, parseBrandList, readShopFilters } from './shop-query.mjs';
 
 const LARAVEL_ASSET_BASE_URL = API_BASE_URL.replace(/\/api\/v\d+$/i, '').replace(/\/api$/i, '');
 
@@ -36,164 +37,117 @@ function productHref(product = {}) {
   return raw.startsWith('/') ? raw : `/${raw}`;
 }
 
-function parseBrandList(value) {
-  const unique = new Map();
-
-  String(value || '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .forEach((item) => {
-      const key = item.toLocaleLowerCase();
-      if (!unique.has(key)) unique.set(key, item);
-    });
-
-  return Array.from(unique.values());
+function initialPagination(data, limit = 12) {
+  return {
+    current_page: Number(data?.products?.current_page || 1),
+    last_page: Number(data?.products?.last_page || 1),
+    per_page: Number(data?.products?.per_page || limit),
+    total: Number(data?.products?.total || 0),
+  };
 }
 
-export default function ShopView({ initialData = null }) {
+export default function ShopView({ initialData = null, initialDataQuery = '' }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialParams = useMemo(() => {
-    return {
-      page: Number(searchParams.get('page') || 1),
-      limit: Number(searchParams.get('limit') || 12),
-      sort: searchParams.get('sort') || 'low',
-      availability: searchParams.get('availability') || '',
-      brand: searchParams.get('brand') || '',
-      minPrice: searchParams.get('minPrice') || '',
-      maxPrice: searchParams.get('maxPrice') || '',
-      query: searchParams.get('query') || '',
-      category_id: searchParams.get('category_id') || '',
-    };
-  }, [searchParams]);
+  // The URL is the sole committed source of shop filters. This fixes the
+  // setFilters/router.push synchronization race on filter changes and Back.
+  const queryKey = useMemo(() => buildShopQuery(searchParams).toString(), [searchParams]);
+  const filters = useMemo(() => readShopFilters(searchParams), [queryKey]);
+  const pendingFilters = useRef(null);
 
-  const [filters, setFilters] = useState(initialParams);
-  const [searchInput, setSearchInput] = useState(initialParams.query);
-
+  const [searchInput, setSearchInput] = useState(filters.query);
   const [priceInputs, setPriceInputs] = useState({
-    minPrice: initialParams.minPrice || 10,
-    maxPrice: initialParams.maxPrice || 100000,
+    minPrice: filters.minPrice || 10,
+    maxPrice: filters.maxPrice || 100000,
   });
 
   const [products, setProducts] = useState(initialData?.products?.data || []);
   const [brands, setBrands] = useState(initialData?.brands || []);
   const [categories, setCategories] = useState(initialData?.categories || []);
-
-  const [pagination, setPagination] = useState({
-    current_page: initialData?.products?.current_page || 1,
-    last_page: initialData?.products?.last_page || 1,
-    per_page: initialData?.products?.per_page || 12,
-    total: initialData?.products?.total || 0,
-  });
-
-  // Start without a loading spinner when server-rendered initial data is present.
+  const [pagination, setPagination] = useState(initialPagination(initialData, filters.limit));
   const [loading, setLoading] = useState(initialData === null);
   const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
   const [message, setMessage] = useState(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   function updateUrl(nextFilters) {
-    const params = new URLSearchParams();
+    const nextQuery = buildShopQuery(nextFilters).toString();
+    if (nextQuery === queryKey && pendingFilters.current === null) return;
 
-    Object.entries(nextFilters).forEach(([key, value]) => {
-      if (
-        value !== null &&
-        value !== undefined &&
-        value !== '' &&
-        !(key === 'page' && Number(value) === 1)
-      ) {
-        params.set(key, value);
-      }
-    });
-
-    router.push(`/shop${params.toString() ? `?${params.toString()}` : ''}`, {
-      scroll: false,
-    });
+    pendingFilters.current = nextFilters;
+    setLoading(true);
+    setMessage(null);
+    router.push(`/shop${nextQuery ? `?${nextQuery}` : ''}`, { scroll: false });
   }
 
   function applyFilters(patch) {
-    const nextFilters = {
-      ...filters,
+    // Until Next finishes a navigation, additional brand clicks must build on
+    // the pending selection instead of overwriting each other.
+    const previous = pendingFilters.current || filters;
+    const next = readShopFilters({
+      ...previous,
       ...patch,
-      page: patch.page || 1,
-    };
-
-    setFilters(nextFilters);
-    updateUrl(nextFilters);
+      page: Object.prototype.hasOwnProperty.call(patch, 'page') ? patch.page : 1,
+    });
+    updateUrl(next);
   }
 
   function clearFilters() {
-    const nextFilters = {
-      page: 1,
-      limit: filters.limit,
-      sort: filters.sort,
-      availability: '',
-      brand: '',
-      minPrice: '',
-      maxPrice: '',
-      query: '',
-      category_id: '',
-    };
-
-    setFilters(nextFilters);
+    const previous = pendingFilters.current || filters;
     setSearchInput('');
-
-    setPriceInputs({
-      minPrice: 10,
-      maxPrice: 100000,
-    });
-
-    updateUrl(nextFilters);
+    setPriceInputs({ minPrice: 10, maxPrice: 100000 });
+    updateUrl(readShopFilters({ limit: previous.limit, sort: previous.sort }));
   }
 
-  const requestSequence = useRef(0);
+  // The server has already fetched this exact URL with cache: no-store. Use
+  // its result after each navigation instead of keeping the initial SSR data
+  // forever or issuing a second identical browser request.
+  // Only fall back to the browser proxy if the server fetch failed.
+  useEffect(() => {
+    const controller = new AbortController();
+    pendingFilters.current = null;
+    setSearchInput(filters.query);
+    setPriceInputs({
+      minPrice: filters.minPrice || 10,
+      maxPrice: filters.maxPrice || 100000,
+    });
 
-  async function fetchShopData(activeFilters) {
-    const requestId = ++requestSequence.current;
+    const acceptResult = (result) => {
+      setProducts(Array.isArray(result?.products?.data) ? result.products.data : []);
+      setBrands(Array.isArray(result?.brands) ? result.brands : []);
+      setCategories(Array.isArray(result?.categories) ? result.categories : []);
+      setPagination(initialPagination(result, filters.limit));
+      setMessage(null);
+      setLoading(false);
+    };
+
+    if (initialData && initialDataQuery === queryKey) {
+      acceptResult(initialData);
+      return () => controller.abort();
+    }
 
     setLoading(true);
     setMessage(null);
-
-    try {
-      const params = new URLSearchParams();
-
-      Object.entries(activeFilters).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && value !== '') {
-          params.set(key, value);
-        }
-      });
-
-      const result = await apiRequest(`/shop?${params.toString()}`);
-
-      // A quick sequence of filter/search changes can leave multiple requests
-      // in flight. Only the newest response is allowed to update the grid.
-      if (requestId !== requestSequence.current) return;
-
-      setProducts(result.products?.data || []);
-      setBrands(result.brands || []);
-      setCategories(result.categories || []);
-
-      setPagination({
-        current_page: result.products?.current_page || 1,
-        last_page: result.products?.last_page || 1,
-        per_page: result.products?.per_page || activeFilters.limit,
-        total: result.products?.total || 0,
-      });
-    } catch (error) {
-      if (requestId !== requestSequence.current) return;
-
-      setMessage({
-        type: 'error',
-        text: error.message || 'Something went wrong while loading products.',
-      });
-    } finally {
-      if (requestId === requestSequence.current) {
+    apiRequest(`/shop?${queryKey}`, { signal: controller.signal })
+      .then((result) => {
+        if (!controller.signal.aborted) acceptResult(result);
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        setProducts([]);
+        setPagination(initialPagination(null, filters.limit));
+        setMessage({
+          type: 'error',
+          text: error.message || 'Something went wrong while loading products.',
+        });
         setLoading(false);
-      }
-    }
-  }
+      });
+
+    return () => controller.abort();
+  // Only the URL and matching server response trigger a new data application.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, initialData, initialDataQuery]);
 
   // async function addToWishlist(productId) {
   //   setWishlistLoadingId(productId);
@@ -221,10 +175,6 @@ export default function ShopView({ initialData = null }) {
   //   }
   // }
 
-  // Track whether the initial server data has already been consumed so the
-  // first client-side effect doesn't double-fetch on hydration.
-  const initialDataConsumed = useRef(initialData !== null);
-
   useEffect(() => {
     if (!mobileFilterOpen) return undefined;
 
@@ -242,36 +192,6 @@ export default function ShopView({ initialData = null }) {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [mobileFilterOpen]);
-
-  useEffect(() => {
-    setFilters(initialParams);
-    setSearchInput(initialParams.query);
-
-    setPriceInputs({
-      minPrice: initialParams.minPrice || 10,
-      maxPrice: initialParams.maxPrice || 100000,
-    });
-  }, [initialParams]);
-
-  useEffect(() => {
-    // Skip the very first run when the server already provided data.
-    if (initialDataConsumed.current) {
-      initialDataConsumed.current = false;
-      return;
-    }
-    fetchShopData(filters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    filters.page,
-    filters.limit,
-    filters.sort,
-    filters.availability,
-    filters.brand,
-    filters.minPrice,
-    filters.maxPrice,
-    filters.query,
-    filters.category_id,
-  ]);
 
   const selectedBrands = useMemo(
     () => parseBrandList(filters.brand),
@@ -310,14 +230,14 @@ export default function ShopView({ initialData = null }) {
     const normalized = String(brandName || '').trim();
     if (!normalized) return;
 
+    const currentlySelected = parseBrandList((pendingFilters.current || filters).brand);
     const key = normalized.toLocaleLowerCase();
-    const nextBrands = selectedBrandKeys.has(key)
-      ? selectedBrands.filter((brand) => brand.toLocaleLowerCase() !== key)
-      : [...selectedBrands, normalized];
+    const selected = currentlySelected.some((brand) => brand.toLocaleLowerCase() === key);
+    const nextBrands = selected
+      ? currentlySelected.filter((brand) => brand.toLocaleLowerCase() !== key)
+      : [...currentlySelected, normalized];
 
-    applyFilters({
-      brand: nextBrands.join(','),
-    });
+    applyFilters({ brand: nextBrands.join(',') });
   }
 
   function clearBrandFilter() {
@@ -558,6 +478,7 @@ export default function ShopView({ initialData = null }) {
                       <option value="12">12</option>
                       <option value="22">22</option>
                       <option value="33">33</option>
+                      <option value="100">100</option>
                     </select>
                   </div>
 

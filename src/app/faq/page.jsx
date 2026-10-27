@@ -9,7 +9,7 @@ import { SALES_WHATSAPP_E164, buildWhatsAppUrl } from "@/lib/config";
 export const metadata = buildMetadata({
   title: `Frequently Asked Questions | ${SITE_NAME}`,
   description:
-    "Answers to common questions about ordering, payment, delivery, warranty, and returns at Ponnobd Electronics.",
+    "Answers to common questions about ordering, payment, delivery, and returns at The Brain BD.",
   path: "/faq",
 });
 
@@ -18,7 +18,7 @@ const FAQ_GROUPS = [
     title: "Ordering & Payment",
     items: [
       {
-        q: "How do I place an order on Ponnobd Electronics?",
+        q: "How do I place an order on The Brain BD?",
         a: "Browse any category or use search to find a product, then tap \u201cOrder Now\u201d or add it to your cart and proceed to checkout. Fill in your name, phone number, and delivery address, and confirm the order. Our team will call to confirm the details before it's dispatched.",
       },
       {
@@ -30,8 +30,8 @@ const FAQ_GROUPS = [
         a: "Yes, as long as the order hasn't been dispatched yet. Contact our support team over phone or WhatsApp as soon as possible with your order details and we'll update or cancel it for you.",
       },
       {
-        q: "Is it safe to order from Ponnobd Electronics?",
-        a: "Yes. We are an official Pentanik brand showroom, and every order is confirmed by phone before dispatch. Since payment is collected as Cash on Delivery, you only pay once you've received your product.",
+        q: "Is it safe to order from The Brain BD?",
+        a: "You can review product descriptions and prices before ordering, choose Cash on Delivery at checkout, and contact our support team by phone or WhatsApp for assistance.",
       },
     ],
   },
@@ -86,7 +86,7 @@ export default function FaqPage() {
         <LegalHero
           eyebrow="Help Center"
           title="Frequently Asked Questions"
-          description="Everything you need to know about ordering, delivery, warranty, and support at Ponnobd Electronics."
+          description="Everything you need to know about ordering, delivery, warranty, and support at The Brain BD."
           crumbLabel="FAQ"
         />
 
@@ -125,7 +125,7 @@ export default function FaqPage() {
               <p>Still have questions? Our team is happy to help.</p>
               <a
                 className={styles.faqCtaBtn}
-                href={buildWhatsAppUrl("Hi, I have a question about Ponnobd Electronics.")}
+                href={buildWhatsAppUrl("Hi, I have a question about The Brain BD.")}
                 target="_blank"
                 rel="noopener noreferrer"
               >

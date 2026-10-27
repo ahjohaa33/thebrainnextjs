@@ -244,8 +244,11 @@ export function buildMetadata({
  */
 export function shouldNoindex({ pathname, searchParams } = {}) {
   const sp = searchParams || {};
-  if (sp.query || sp.q) return true;          // internal search
-  if (sp.utm_source || sp.utm_campaign) return true;
+  // Faceted, sorted and internal-search URLs do not have standalone SEO value.
+  if (['query', 'q', 'search', 'brand', 'brand_id', 'category_id', 'sort',
+       'minPrice', 'maxPrice', 'availability', 'status', 'limit',
+       'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+      .some(key => Boolean(sp[key]))) return true;
   if (pathname && /^\/(cart|checkout|order-success)(\/|$)/.test(pathname))
     return true;
   return false;

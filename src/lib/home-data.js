@@ -117,7 +117,7 @@ function normalizeCategoryLink(link = "") {
 }
 
 export function normalizeHomePayload(data = {}) {
-  const siteName = data?.site?.site_name || "Ponnobd";
+  const siteName = data?.site?.site_name || "The Brain BD";
   const rawHomeContent = data?.home_content;
   const homeContent =
     rawHomeContent && typeof rawHomeContent === "object"

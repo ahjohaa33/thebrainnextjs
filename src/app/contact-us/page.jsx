@@ -13,7 +13,7 @@ import { getFooterData } from "@/lib/footer-data";
 export const metadata = buildMetadata({
   title: `Contact Us | ${SITE_NAME}`,
   description:
-    "Get in touch with TheBrainbd Lifestyle — call or WhatsApp our support team, or send us a message. Find our official Pentanik showroom addresses here.",
+    "Get in touch with TheBrainbd Lifestyle — call or WhatsApp our support team, or send us a message. Find our official contact information and location details.",
   path: "/contact-us",
 });
 
@@ -52,7 +52,7 @@ export default async function ContactUsPage() {
                 Call {SALES_WHATSAPP_E164}
               </a>
               <a
-                href={buildWhatsAppUrl("Hello, I have a question about Ponnobd Electronics.")}
+                href={buildWhatsAppUrl("Hello, I have a question about The Brain BD.")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.whatsappBtn}

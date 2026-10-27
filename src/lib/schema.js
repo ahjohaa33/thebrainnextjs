@@ -18,9 +18,21 @@
  */
 
 import { stripMeta, siteUrl, SITE_URL, SITE_NAME } from "./seo";
-import { SALES_WHATSAPP_E164 } from "@/lib/config";
+import { SALES_WHATSAPP_E164, LARAVEL_BASE_URL } from "@/lib/config";
 
 const truthy = (v) => v !== undefined && v !== null && v !== "";
+
+// Laravel serves product images from its web origin, not from the Next.js
+// site's /uploads path or the API's /api/v1 base path.
+function productAssetUrl(value) {
+  const raw = typeof value === 'string' ? value : value?.url || value?.image || value?.src;
+  if (!raw || typeof raw !== 'string') return null;
+  try {
+    const backendWebOrigin = new URL(LARAVEL_BASE_URL).origin;
+    const image = new URL(raw, `${backendWebOrigin}/`);
+    return ['http:', 'https:'].includes(image.protocol) ? image.href : null;
+  } catch { return null; }
+}
 
 /* ─────────── Organization (emit once, in root layout) ─────────── */
 
@@ -175,11 +187,13 @@ export function buildProductSchema(product = {}) {
   const stock = Number(product.current_stock ?? product.stock ?? 0);
   const availability = stock > 0 ? AVAILABILITY.in_stock : AVAILABILITY.out_of_stock;
 
-  const url = product.canonical_url || product.url || (product.slug ? siteUrl(`/${product.slug}`) : undefined);
+  const url = product.canonical_url || product.url || (product.slug ? `/${product.slug}` : undefined);
+  const canonicalProductUrl = url ? siteUrl(url) : undefined;
 
   const images = []
     .concat(product.thumbnail || [])
     .concat(Array.isArray(product.gallery) ? product.gallery : [])
+    .map(productAssetUrl)
     .filter(truthy);
 
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
@@ -205,21 +219,17 @@ export function buildProductSchema(product = {}) {
       ? { "@type": "Brand", name: product.brand?.name || product.brand_name }
       : undefined,
     image: images.length > 0 ? images : undefined,
-    url,
+    url: canonicalProductUrl,
     offers: {
       "@type": "Offer",
-      url,
+      url: canonicalProductUrl,
       priceCurrency: "BDT",
       price: Number(price).toFixed(2),
       availability,
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@id": `${SITE_URL}/#store` },
-      // Google requires either priceValidUntil OR shippingDetails+returnPolicy
-      // for full eligibility. We provide a 30-day rolling validity, which is
-      // safe even when Laravel doesn't send a real expiry.
-      priceValidUntil: new Date(Date.now() + 30 * 86400 * 1000)
-        .toISOString()
-        .split("T")[0],
+      // Add priceValidUntil only when the backend exposes an actual expiry.
+      ...(product.price_valid_until ? { priceValidUntil: product.price_valid_until } : {}),
     },
   };
 
@@ -263,7 +273,7 @@ function getProductImage(product = {}) {
 
   if (!image) return undefined;
 
-  return String(image).startsWith("http") ? image : siteUrl(image);
+  return productAssetUrl(image) || undefined;
 }
 
 function getListProductPrice(product = {}) {

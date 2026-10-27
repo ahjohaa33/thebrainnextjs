@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { API_BASE_URL } from "@/lib/api";
+import { buildMetadata, shouldNoindex } from "@/lib/seo";
 import styles from "./blogPage.module.css";
 
 // Change this import path based on your project structure
@@ -68,21 +69,15 @@ export async function generateMetadata({ searchParams }) {
     description = `Search results for ${search} in blog posts.`;
   }
 
-  return {
+  return buildMetadata({
     title,
     description,
-    alternates: {
-      canonical: buildBlogUrl({
-        search,
-        category,
-        page,
-      }),
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
+    path: "/blog",
+    searchParams: { page },
+    noindex: Boolean(search || category) || shouldNoindex({
+      pathname: "/blog", searchParams: { search, category },
+    }),
+  });
 }
 
 export default async function BlogPage({ searchParams }) {

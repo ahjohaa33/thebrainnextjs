@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { API_BASE_URL } from "@/lib/api";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -228,6 +229,8 @@ export default async function BlogPostPage({ params }) {
       ).join(", ")}`
     );
   }
+
+  if (!post && !errorMessage) notFound();
 
   if (!post) {
     return (
