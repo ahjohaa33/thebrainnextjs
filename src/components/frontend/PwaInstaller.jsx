@@ -128,7 +128,7 @@ export default function PwaInstaller() {
         type="button"
         className={styles.installBtn}
         onClick={handleClick}
-        aria-label="Install Ponnobd app"
+        aria-label="Install thebrainbd app"
         data-location="pwa_install"
       >
         <img
