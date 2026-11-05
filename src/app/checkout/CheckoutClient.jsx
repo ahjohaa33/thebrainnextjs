@@ -6,7 +6,7 @@ import "@/app/_styles/bootstrap.min.css";
 import "@/app/_styles/main.css";
 import "./checkoutPage.module.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiRequest } from "@/lib/api";
@@ -14,21 +14,15 @@ import { absoluteUrl } from "@/lib/config";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import styles from "./checkoutPage.module.css";
+import {
+  SHIPPING_METHODS,
+  loadShippingRates,
+  normalizeShippingType,
+  numericAmount,
+  setCartShipping,
+} from "@/lib/checkoutShipping";
 
 /* ─── helpers ────────────────────────────────────────────────────────── */
-
-const SHIPPING_METHODS = [
-  {
-    value: "inside_dhaka",
-    label: "Inside Dhaka",
-    icon: "🏙️",
-  },
-  {
-    value: "outside_dhaka",
-    label: "Outside Dhaka",
-    icon: "🚚",
-  },
-];
 
 function formatPrice(value) {
   return new Intl.NumberFormat("en-BD", {
@@ -131,7 +125,16 @@ export default function CheckoutClient() {
 
   const [removingId, setRemovingId] = useState(null);
   const [placingOrder, setPlacingOrder] = useState(false);
-  const [updatingShipping, setUpdatingShipping] = useState(false);
+  const [updatingShipping, setUpdatingShipping] = useState(true);
+  const [shippingCost, setShippingCost] = useState(null);
+  const [shippingRates, setShippingRates] = useState({
+    inside_dhaka: null,
+    outside_dhaka: null,
+  });
+  const [shippingError, setShippingError] = useState("");
+  const [shippingRetry, setShippingRetry] = useState(0);
+  // A single flight prevents duplicate cart/shipping writes under Strict Mode.
+  const initialShippingRequest = useRef(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -148,18 +151,57 @@ export default function CheckoutClient() {
   const [pageError, setPageError] = useState("");
   const [pageSuccess, setPageSuccess] = useState("");
 
-  // Seed shipping_type from first cart item once loaded, but keep only the two allowed methods.
+  // Fetch a fresh cart (CartContext intentionally defers this on route mount),
+  // then ask Laravel for BOTH charges and restore the saved shipping method.
+  // The API only returns one shipping quote per /cart/shipping response.
   useEffect(() => {
-    if (cartItems.length > 0) {
-      const firstShipping = cartItems[0]?.shipping_type || "inside_dhaka";
-      const normalizedShipping = SHIPPING_METHODS.some(
-        (method) => method.value === firstShipping
-      )
-        ? firstShipping
-        : "inside_dhaka";
-      setForm((prev) => ({ ...prev, shipping_type: normalizedShipping }));
+    let active = true;
+    setUpdatingShipping(true);
+    setShippingCost(null);
+    setShippingError("");
+
+    if (!initialShippingRequest.current) {
+      initialShippingRequest.current = (async () => {
+        const cartPayload = await refreshCart();
+        if (!(cartPayload?.data?.items || []).length) return null;
+
+        const selectedType = normalizeShippingType(
+          cartPayload?.data?.shipping_type || cartPayload?.data?.items?.[0]?.shipping_type
+        );
+        return loadShippingRates(apiRequest, selectedType);
+      })();
     }
-  }, [cartItems.length]);
+
+    initialShippingRequest.current
+      .then((result) => {
+        if (!active || !result) return;
+        setShippingRates(result.rates);
+        setShippingCost(result.selectedCost);
+        setForm((prev) => ({ ...prev, shipping_type: result.selectedType }));
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error("Checkout shipping rates error:", error);
+        setShippingError(
+          "Could not load delivery charges from the server. Please retry before placing your order."
+        );
+      })
+      .finally(() => {
+        if (active) setUpdatingShipping(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshCart, shippingRetry]);
+
+  function retryShippingRates() {
+    initialShippingRequest.current = null;
+    setShippingRetry((count) => count + 1);
+  }
+
+  const checkoutTotal =
+    shippingCost === null ? null : Number(cartSubtotal) + shippingCost;
 
   // Analytics
   useEffect(() => {
@@ -193,10 +235,12 @@ export default function CheckoutClient() {
         form.check_terms &&
         accountPasswordOk &&
         cartItems.length > 0 &&
+        shippingCost !== null &&
+        !shippingError &&
         !placingOrder &&
         !updatingShipping
     );
-  }, [form, cartItems.length, placingOrder, updatingShipping]);
+  }, [form, cartItems.length, placingOrder, updatingShipping, shippingCost, shippingError]);
 
   function updateField(name, value) {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -234,31 +278,31 @@ export default function CheckoutClient() {
   }
 
   async function updateShipping(value) {
-    const previousShippingType = form.shipping_type;
+    if (updatingShipping || value === form.shipping_type) return;
 
     setUpdatingShipping(true);
     setPageError("");
     setPageSuccess("");
-    setForm((prev) => ({ ...prev, shipping_type: value }));
+    setShippingError("");
 
     try {
-      const payload = await apiRequest("/cart/shipping", {
-        method: "POST",
-        body: JSON.stringify({ shipping_type: value }),
-      });
-
-      setPageSuccess(
-        resolveMessage(payload, "Shipping method updated successfully.")
-      );
-
-      // If Laravel recalculates shipping/totals, pull the latest cart state.
+      const { cost, payload } = await setCartShipping(apiRequest, value);
+      // Change the radio and total only after Laravel confirms the charge.
+      setForm((prev) => ({ ...prev, shipping_type: value }));
+      setShippingCost(cost);
+      setShippingRates((prev) => ({ ...prev, [value]: cost }));
+      setPageSuccess(resolveMessage(payload, "Shipping method updated successfully."));
+      // Keep cart subtotal in sync with the server; the order endpoint will
+      // independently recalculate the authoritative amount at checkout.
       refreshCart().catch(() => {});
     } catch (error) {
       console.error("Shipping update error:", error);
-      setForm((prev) => ({ ...prev, shipping_type: previousShippingType }));
-      setPageError(
-        error?.message || "Shipping method could not be updated."
+      setShippingCost(null);
+      setShippingError(
+        "Unable to confirm the delivery charge. Please retry to continue."
       );
+      // A timed-out request might have changed the saved cart's shipping type.
+      // Re-fetching both rates restores a known choice before allowing checkout.
     } finally {
       setUpdatingShipping(false);
     }
@@ -300,22 +344,38 @@ export default function CheckoutClient() {
 
       const orderDetails = resolveOrderDetails(data);
       const orderNumber = resolveOrderNumber(data);
+      const confirmedSubtotal = numericAmount(orderDetails?.subtotal) ?? Number(cartSubtotal);
+      const confirmedShipping = numericAmount(orderDetails?.shipping_cost) ?? shippingCost;
+      // Prefer the order recorded by Laravel. Never replace it with a
+      // frontend subtotal that omits delivery or count delivery twice.
+      const confirmedTotal =
+        numericAmount(orderDetails?.total) ??
+        numericAmount(orderDetails?.grand_total) ??
+        confirmedSubtotal + confirmedShipping;
 
       if (typeof window !== "undefined") {
-        window.sessionStorage.setItem(
-          "ponnobd_last_order",
-          JSON.stringify({
-            orderNumber,
-            orderDetails,
-            customer,
-            shippingType: form.shipping_type,
-            paymentType: "cash_on_delivery",
-            subtotal: cartSubtotal,
-            items: cartItems,
-            response: data,
-            placedAt: new Date().toISOString(),
-          })
-        );
+        try {
+          window.sessionStorage.setItem(
+            "ponnobd_last_order",
+            JSON.stringify({
+              orderNumber,
+              orderDetails,
+              customer,
+              shippingType: form.shipping_type,
+              paymentType: "cash_on_delivery",
+              subtotal: confirmedSubtotal,
+              shippingCost: confirmedShipping,
+              orderTotal: confirmedTotal,
+              items: cartItems,
+              response: data,
+              placedAt: new Date().toISOString(),
+            })
+          );
+        } catch (storageError) {
+          // Storage failure must never turn a successfully placed order into
+          // an apparent checkout failure (risking a duplicate order).
+          console.error("Could not save order summary to session storage:", storageError);
+        }
       }
 
       addToast("Order placed successfully! 🎉", "success", 4000);
@@ -573,15 +633,30 @@ export default function CheckoutClient() {
                           value={method.value}
                           checked={form.shipping_type === method.value}
                           onChange={(e) => updateShipping(e.target.value)}
-                          disabled={updatingShipping}
+                          disabled={updatingShipping || shippingCost === null}
                         />
                         <div className={styles.shippingOptionContent}>
                           <span className={styles.shippingIcon}>{method.icon}</span>
-                          <span className={styles.shippingLabel}>{method.label}</span>
+                          <span className={styles.shippingText}>
+                            <span className={styles.shippingLabel}>{method.label}</span>
+                            <strong className={styles.shippingRate}>
+                              {shippingRates[method.value] === null
+                                ? (updatingShipping ? "Loading charge…" : "Charge unavailable")
+                                : formatPrice(shippingRates[method.value])}
+                            </strong>
+                          </span>
                         </div>
                       </label>
                     ))}
                   </div>
+                  {shippingError && (
+                    <div className={styles.shippingError} role="alert">
+                      <span>{shippingError}</span>
+                      <button type="button" onClick={retryShippingRates} disabled={updatingShipping}>
+                        Retry shipping rates
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Totals */}
@@ -590,9 +665,13 @@ export default function CheckoutClient() {
                     <span>Subtotal</span>
                     <span>{formatPrice(cartSubtotal)}</span>
                   </div>
+                  <div className={styles.totalLine}>
+                    <span>Delivery Charge</span>
+                    <span>{shippingCost === null ? "Calculating…" : formatPrice(shippingCost)}</span>
+                  </div>
                   <div className={`${styles.totalLine} ${styles.grandTotal}`}>
-                    <span>Total</span>
-                    <span>{formatPrice(cartSubtotal)}</span>
+                    <span>Total (Including Delivery)</span>
+                    <span>{checkoutTotal === null ? "Calculating…" : formatPrice(checkoutTotal)}</span>
                   </div>
                 </div>
               </div>

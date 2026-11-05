@@ -6,6 +6,9 @@ import Link from "next/link";
 import styles from "./ProductPage.module.css";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { withCacheBust } from "@/lib/image-cache-bust";
+import { getProductFaqItems } from "@/lib/product-faq";
+import { mrpCompareAt } from "@/lib/mrp-pricing";
+import { shopAssetUrl } from "@/lib/shop-catalog";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import {
@@ -96,6 +99,16 @@ function getProductCategory(product) {
 }
 
 function getProductWarranty(product) {
+  // Use the warranty assignment returned by Laravel, not the current price
+  // selection, to determine the warranty displayed in Quick Summary.
+  const warrantyOffers = Array.isArray(product?.warranty_offers) ? product.warranty_offers : [];
+  const sectionOffers = Array.isArray(product?.section_offers) ? product.section_offers : [];
+  const hasThreeYearWarranty = [...warrantyOffers, ...sectionOffers].some(
+    (offer) => offer?.warranty_type === "three_year" || Number(offer?.warranty_years) === 3
+  ) || Number(product?.selected_warranty_years) === 3 || Number(product?.warranty_years) === 3;
+
+  if (hasThreeYearWarranty) return "3 Years Parts Panel Replacement Warranty";
+
   return (
     product?.warranty ||
     product?.warranty_text ||
@@ -105,15 +118,14 @@ function getProductWarranty(product) {
   );
 }
 
-function getProductSummaryPrice(product = {}) {
-  const regularPrice = Number(product?.price ?? 0);
-  const offerPrice = Number(product?.offer_price ?? 0);
-
-  if (offerPrice > 0 && regularPrice > 0 && offerPrice < regularPrice) {
-    return offerPrice;
-  }
-
-  return regularPrice > 0 ? regularPrice : offerPrice;
+function getProductSummaryPrice(product) {
+  return (
+    product?.discount_price ||
+    product?.sale_price ||
+    product?.regular_price ||
+    product?.price ||
+    0
+  );
 }
 
 function FacebookIcon(props) {
@@ -192,16 +204,72 @@ async function copyShareLink(url) {
   return copied;
 }
 
-export default function ProductPage({ product = {}, baseUrl = "" }) {
+export default function ProductPage({ product = {}, baseUrl = "", initialWarrantyType = "regular", initialSectionId = null }) {
   const images = useMemo(() => getAllImages(product), [product]);
   const [activeImage, setActiveImage] = useState(images[0] || "");
- 
-
+  const [activeTab, setActiveTab] = useState("specifications");
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  // Zoom the displayed <img> itself: a CSS background can retain older
+  // image bytes even after a replacement upload refreshes the main image.
   const [zoomStyle, setZoomStyle] = useState({
-    backgroundImage: "",
-    backgroundPosition: "center",
-    opacity: 0,
+    transform: "scale(1)",
+    transformOrigin: "center center",
   });
+
+  useEffect(() => {
+    // On client-side navigation to a refreshed product, don't keep the old
+    // selected gallery image or zoom coordinates from the previous response.
+    setActiveImage(images[0] || "");
+    setZoomStyle({ transform: "scale(1)", transformOrigin: "center center" });
+  }, [images]);
+
+  const extendedWarrantyOffer = Array.isArray(product.warranty_offers)
+    ? product.warranty_offers.find((offer) => offer.warranty_type === "three_year")
+    : null;
+  const regularWarrantyOffer = Array.isArray(product.warranty_offers)
+    ? product.warranty_offers.find((offer) => offer.warranty_type === "regular")
+    : null;
+  const hasExtendedWarranty = Boolean(extendedWarrantyOffer);
+  const sectionOffers = Array.isArray(product.section_offers) ? product.section_offers : [];
+  // Validate deep-link section membership against Laravel's authoritative offers.
+  const initialSectionOffer = sectionOffers.find((offer) =>
+    Number(offer.section_id) > 0 && Number(offer.section_id) === Number(initialSectionId)
+  ) || null;
+  const initialType = (initialSectionOffer?.warranty_type === "three_year" || initialWarrantyType === "three_year")
+    && hasExtendedWarranty ? "three_year" : "regular";
+  const [selectedWarranty, setSelectedWarranty] = useState(initialType);
+  const [selectedSectionId, setSelectedSectionId] = useState(
+    initialSectionOffer && initialSectionOffer.warranty_type === initialType
+      ? Number(initialSectionOffer.section_id) : null
+  );
+  const isThreeYear = selectedWarranty === "three_year" && hasExtendedWarranty;
+  const matchedSectionOffer = sectionOffers.find((offer) =>
+    Number(offer.section_id) === Number(selectedSectionId) &&
+    offer.warranty_type === selectedWarranty && selectedSectionId != null
+  );
+  const selectedOffer = matchedSectionOffer || (isThreeYear ? extendedWarrantyOffer : regularWarrantyOffer);
+  const selectedPrice = Number(selectedOffer?.price ?? getProductSummaryPrice(product));
+  const selectedYears = selectedOffer?.warranty_years != null
+    ? Number(selectedOffer.warranty_years) : (isThreeYear ? 3 : 1);
+  // The gallery image already has its seals permanently embedded by Laravel.
+  // The separate warranty summary beneath the title still needs the badge.
+  // Prefer the selected offer's seal; use the product-level seal only for the
+  // matching 3-year offer so a different warranty never shows the wrong badge.
+  const selectedWarrantySeal = shopAssetUrl(
+    selectedOffer?.warranty_seal_url ||
+    (isThreeYear ? extendedWarrantyOffer?.warranty_seal_url || product.warranty_seal_url : regularWarrantyOffer?.warranty_seal_url),
+    product.updated_at
+  );
+  const selectedOriginalPrice = mrpCompareAt(product, selectedPrice);
+
+  // When navigation opens a different product/offer, respect its URL.
+  useEffect(() => {
+    const type = (initialSectionOffer?.warranty_type === "three_year" || initialWarrantyType === "three_year")
+      && hasExtendedWarranty ? "three_year" : "regular";
+    setSelectedWarranty(type);
+    setSelectedSectionId(initialSectionOffer && initialSectionOffer.warranty_type === type
+      ? Number(initialSectionOffer.section_id) : null);
+  }, [product.id, initialWarrantyType, initialSectionId, hasExtendedWarranty]);
 
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [orderNowLoading, setOrderNowLoading] = useState(false);
@@ -217,6 +285,24 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
 
   const router = useRouter();
   const { addToCart } = useCart();
+
+  function chooseWarranty(type) {
+    if (type === "three_year" && !extendedWarrantyOffer) return;
+    const next = type === "three_year" ? "three_year" : "regular";
+    setSelectedWarranty(next);
+    // Switching plan clears an incompatible section-specific price selection.
+    const keepSection = matchedSectionOffer?.warranty_type === next;
+    if (!keepSection) setSelectedSectionId(null);
+    // Preserve the offer in copied/shared deep links without a full page reload.
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (next === "three_year") url.searchParams.set("warranty", "three_year");
+      else url.searchParams.delete("warranty");
+      if (!keepSection) url.searchParams.delete("section_id");
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+      setShareUrl(url.href);
+    }
+  }
 
   const fallbackShareUrl = useMemo(() => {
     if (!product?.slug) return "";
@@ -259,15 +345,22 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
 
-
+  useEffect(() => {
+    if (activeTab === "video" && product?.product_video) {
+      videoEngagement({
+        action: "play",
+        videoTitle: product.name,
+      });
+    }
+  }, [activeTab, product?.product_video, product?.name]);
 
   async function handleAddToCart() {
     if (addToCartLoading || orderNowLoading) return;
 
     try {
       setAddToCartLoading(true);
-      await addToCart(product.id, 1);
-      trackAddToCart(product, 1);
+      await addToCart(product.id, 1, isThreeYear ? "three_year" : "regular", selectedSectionId);
+      trackAddToCart({ ...product, discount_price: selectedPrice, price: selectedPrice }, 1);
     } catch (error) {
       alert(error.message || "Unable to add product to cart.");
     } finally {
@@ -280,8 +373,8 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
 
     try {
       setOrderNowLoading(true);
-      await addToCart(product.id, 1);
-      trackAddToCart(product, 1);
+      await addToCart(product.id, 1, isThreeYear ? "three_year" : "regular", selectedSectionId);
+      trackAddToCart({ ...product, discount_price: selectedPrice, price: selectedPrice }, 1);
       router.push("/cart");
     } catch (error) {
       alert(error.message || "Unable to add product to cart.");
@@ -297,14 +390,13 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
     setZoomStyle({
-      backgroundImage: `url(${activeImage})`,
-      backgroundPosition: `${x}% ${y}%`,
-      opacity: 1,
+      transform: "scale(2.2)",
+      transformOrigin: `${Math.max(0, Math.min(100, x))}% ${Math.max(0, Math.min(100, y))}%`,
     });
   }
 
   function handleZoomLeave() {
-    setZoomStyle((prev) => ({ ...prev, opacity: 0 }));
+    setZoomStyle({ transform: "scale(1)", transformOrigin: "center center" });
   }
 
   function handleSizeChartClick() {
@@ -350,27 +442,52 @@ export default function ProductPage({ product = {}, baseUrl = "" }) {
     }
   }
 
+  async function handleSubmitReview() {
+    if (reviewSubmitting) return;
 
-
- 
-
-function decodeEntities(input) {
-  if (typeof input !== "string" || input.indexOf("&") === -1) return input;
-
-  return input.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, body) => {
-    if (body[0] === "#") {
-      const code =
-        body[1] === "x" || body[1] === "X"
-          ? parseInt(body.slice(2), 16)
-          : parseInt(body.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    if (!reviewForm.comment.trim()) {
+      alert("Please write a review before submitting.");
+      return;
     }
-    const named = NAMED_ENTITIES[body.toLowerCase()];
-    return named !== undefined ? named : match;
-  });
-}
 
+    try {
+      setReviewSubmitting(true);
 
+      trackSubmitReview({
+        productId: product?.id,
+        rating: Number(reviewForm.rating),
+      });
+
+      setShowReviewForm(false);
+      alert("Thanks! Your review has been submitted.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
+
+  // Laravel supplies the complete description for each available warranty.
+  // Prefer the currently selected offer, then its year-keyed copy. The old
+  // short_description field stays as a compatible fallback during rollouts.
+  const descriptionsByYears = product.short_descriptions_by_warranty_years;
+  const yearCopy = descriptionsByYears && typeof descriptionsByYears === "object"
+    ? descriptionsByYears[String(selectedYears)] : undefined;
+  const selectedDescription = selectedOffer?.product_short_description ??
+    yearCopy ?? product.short_description;
+  const shortDescription = normalizeHtml(selectedDescription);
+  const description = normalizeHtml(product.description);
+  const supportDescription = normalizeHtml(product.support_description);
+  const productVideo = normalizeHtml(product.product_video);
+
+  const faqItems = useMemo(() => getProductFaqItems(product), [product]);
+
+  const reviews = Array.isArray(product.reviews) ? product.reviews : [];
+  const averageRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) /
+          reviews.length
+        ).toFixed(1)
+      : null;
 
   const relatedProducts = Array.isArray(product.related_products)
     ? [...product.related_products]
@@ -378,32 +495,17 @@ function decodeEntities(input) {
         .slice(0, 4)
     : [];
 
-  const quantity = Number(product.current_stock ?? product.stock ?? 0);
-  const regularPrice = Number(product.price ?? 0);
-  const offerPrice = Number(product.offer_price ?? 0);
-  const hasOffer =
-    regularPrice > 0 &&
-    offerPrice > 0 &&
-    offerPrice < regularPrice;
-  const sellingPrice = hasOffer ? offerPrice : regularPrice;
-  const isInStock = product.stock_status
-    ? product.stock_status === "in_stock" && quantity > 0
-    : quantity > 0;
+  const quantity = Number(product.current_stock || 0);
 
   const summaryImage = activeImage || images[0] || "";
   const summaryBrand = getProductBrand(product);
   const summaryCategory = getProductCategory(product);
-  const summaryWarranty = getProductWarranty(product);
-  const summaryPrice = getProductSummaryPrice(product);
+  const summaryWarranty = selectedYears === 0 ? "No warranty" : `${selectedYears} ${selectedYears === 1 ? "Year" : "Years"} Warranty — Parts and panel replacement`;
+  const summaryPrice = selectedPrice;
   const orderPhone = SALES_WHATSAPP_E164;
-  const features = Array.isArray(product.features)
-    ? product.features.filter(Boolean).map(decodeEntities)
-    : [];
 
   const whatsAppOrderUrl = `https://wa.me/${SALES_WHATSAPP_DIGITS}?text=${encodeURIComponent(
-    `Hello, I want to order: ${product?.name || "this product"} ${
-      shareUrl || fallbackShareUrl
-    }`
+    `Hello, I want to order: ${product?.name || "this product"} (${selectedYears === 0 ? "No Warranty" : `${selectedYears} ${selectedYears === 1 ? "Year" : "Years"} Warranty`}) ${shareUrl || fallbackShareUrl}`
   )}`;
 
   return (
@@ -426,154 +528,175 @@ function decodeEntities(input) {
             <span>{product.name}</span>
           </nav>
 
-        
-<section className={styles.topSection}>
-  <div className={styles.galleryArea}>
-    <div className={styles.galleryLayout}>
-      <div className={styles.thumbColumn}>
-        {images.map((image, index) => (
-          <button
-            key={`${image}-${index}`}
-            type="button"
-            className={`${styles.thumbBtn} ${
-              activeImage === image ? styles.thumbBtnActive : ""
-            }`}
-            onClick={() => setActiveImage(image)}
-            aria-label={`View image ${index + 1}`}
-          >
-            <img
-              src={image}
-              alt={`${product.alt || product.name} view ${index + 1}`}
-              className={styles.thumbImage}
-              loading="lazy"
-            />
-          </button>
-        ))}
-      </div>
+          <section className={styles.topSection}>
+            <div className={styles.galleryArea}>
+              <div className={styles.galleryLayout}>
+                <div className={styles.thumbColumn}>
+                  {images.map((image, index) => (
+                    <button
+                      key={`${image}-${index}`}
+                      type="button"
+                      className={`${styles.thumbBtn} ${
+                        activeImage === image ? styles.thumbBtnActive : ""
+                      }`}
+                      onClick={() => {
+                        setActiveImage(image);
+                        setZoomStyle({ transform: "scale(1)", transformOrigin: "center center" });
+                      }}
+                      aria-label={`View image ${index + 1}`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${product.alt || product.name} view ${index + 1}`}
+                        className={styles.thumbImage}
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
 
-      <div className={styles.mainImageCol}>
-        <div
-          className={styles.mainImageWrap}
-          onMouseMove={handleZoomMove}
-          onMouseLeave={handleZoomLeave}
-        >
-          <img
-            src={activeImage || images[0]}
-            alt={product.alt || product.name}
-            className={styles.mainImage}
-            fetchPriority="high"
-            decoding="async"
-          />
+                <div className={styles.mainImageCol}>
+                  <div
+                    className={styles.mainImageWrap}
+                    onMouseMove={handleZoomMove}
+                    onMouseLeave={handleZoomLeave}
+                  >
+                    <img
+                      src={activeImage || images[0]}
+                      alt={product.alt || product.name}
+                      className={styles.mainImage}
+                      style={zoomStyle}
+                      fetchPriority="high"
+                      decoding="async"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <div className={styles.zoomLens} style={zoomStyle} />
-        </div>
-      </div>
-    </div>
-  </div>
+            <div className={styles.infoArea}>
+              <div className={styles.titleWrap}>
+                <h1 className={styles.title}>{product.name}</h1>
+              </div>
+              <div className={styles.selectedWarrantyInfo}>
+                {selectedWarrantySeal ? (
+                  <img
+                    src={selectedWarrantySeal}
+                    alt={`${selectedYears} ${selectedYears === 1 ? "Year" : "Years"} Warranty badge`}
+                    className={styles.selectedWarrantySeal}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : null}
+                <span>{summaryWarranty}</span>
+              </div>
 
-  <div className={styles.infoArea}>
-    <div className={styles.titleWrap}>
-      <h1 className={styles.title}>{product.name}</h1>
-    </div>
+              {shortDescription ? (
+                <div
+                  className={styles.shortDescription}
+                  dangerouslySetInnerHTML={{ __html: shortDescription }}
+                />
+              ) : null}
 
-        {features.length > 0 ? (
-          <ul className={styles.featureList}>
-            {features.map((feature, index) => (
-              <li key={`${product.id || product.slug || "product"}-${index}`}>
-                {feature}
-              </li>
-            ))}
-          </ul>
-        ) : null}
+              <div className={styles.supportNumber}>
+                <p>
+                  <strong>Details :</strong>{" "}
+                  <a
+                    href={`tel:${SALES_WHATSAPP_E164}`}
+                    onClick={() =>
+                      import("@/lib/analytics").then((m) =>
+                        m.phoneCallClick({
+                          phone: SALES_WHATSAPP_E164,
+                          location: "product_detail",
+                        })
+                      )
+                    }
+                  >
+                    {SALES_WHATSAPP_E164}
+                  </a>
+                </p>
+              </div>
 
-    <div className={styles.supportNumber}>
-      <p>
-        <strong>Details :</strong>{" "}
-        <a
-          href={`tel:${SALES_WHATSAPP_E164}`}
-          onClick={() =>
-            import("@/lib/analytics").then((m) =>
-              m.phoneCallClick({
-                phone: SALES_WHATSAPP_E164,
-                location: "product_detail",
-              })
-            )
-          }
-        >
-          {SALES_WHATSAPP_E164}
-        </a>
-      </p>
-    </div>
+              {extendedWarrantyOffer ? (
+                <fieldset className={styles.warrantyChooser}>
+                  <legend className={styles.warrantyLegend}>Choose warranty &amp; price</legend>
+                  {/* <label className={`${styles.warrantyOption} ${!isThreeYear ? styles.warrantyOptionSelected : ""}`}>
+                    <input
+                      type="radio"
+                      name="product-warranty"
+                      value="regular"
+                      checked={!isThreeYear}
+                      onChange={() => chooseWarranty("regular")}
+                    />
+                    <span>
+                      <strong>{Number((matchedSectionOffer?.warranty_type === "regular" ? matchedSectionOffer : regularWarrantyOffer)?.warranty_years ?? 1) === 0 ? "No Warranty" : "1 Year Warranty"}</strong>
+                      <small>{formatPrice(Number(!isThreeYear ? selectedPrice : (regularWarrantyOffer?.price ?? product.discount_price ?? 0)))}</small>
+                    </span>
+                  </label> */}
+                  <label className={`${styles.warrantyOption} ${isThreeYear ? styles.warrantyOptionSelected : ""}`}>
+                    <input
+                      type="radio"
+                      name="product-warranty"
+                      value="three_year"
+                      checked={isThreeYear}
+                      onChange={() => chooseWarranty("three_year")}
+                    />
+                    <span>
+                      <strong>3 Years Warranty</strong>
+                      <small>{extendedWarrantyOffer.description || "Parts and panel replacement"} · {formatPrice(isThreeYear ? selectedPrice : extendedWarrantyOffer.price)}</small>
+                    </span>
+                  </label>
+                </fieldset>
+              ) : null}
 
-    <div className={styles.statusRow}>
-      <div className={styles.priceBlock}>
-        <p>
-          Price:{" "}
-          {hasOffer ? (
-            <>
-              <span className={styles.discountPrice}>
-                {formatPrice(offerPrice)}
-              </span>
+              <div className={styles.statusRow}>
+                <div className={styles.priceBlock}>
+                  <p>
+                    Price:{" "}
+                    <span className={styles.discountPrice}>{formatPrice(selectedPrice)}</span>
+                    {selectedOriginalPrice !== null ? (
+                      <span className={styles.oldPrice}>{formatPrice(selectedOriginalPrice)}</span>
+                    ) : null}
+                  </p>
+                </div>
 
-              <del className={styles.oldPrice}>
-                {formatPrice(regularPrice)}
-              </del>
-            </>
-          ) : (
-            <span className={styles.discountPrice}>
-              {formatPrice(sellingPrice)}
-            </span>
-          )}
-        </p>
-      </div>
+                <div className={styles.stockBlock}>
+                  <p>
+                    Status:{" "}
+                    <span className={quantity > 0 ? styles.inStock : styles.outStock}>
+                      {quantity > 0 ? "In Stock" : "Out Of Stock"}
+                    </span>
+                  </p>
+                </div>
+              </div>
 
-      <div className={styles.stockBlock}>
-        <p>
-          Status:{" "}
-          <span
-            className={isInStock ? styles.inStock : styles.outStock}
-          >
-            {isInStock ? "In Stock" : "Out Of Stock"}
-          </span>
-        </p>
-      </div>
-    </div>
+              <div className={styles.actions}>
+                {quantity > 0 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      disabled={addToCartLoading || orderNowLoading}
+                      className="btn btn--base"
+                      style={{ display: "block", width: "100%" }}
+                    >
+                      {addToCartLoading ? "Adding..." : "Add To Cart"}
+                    </button>
 
-    <div className={styles.actions}>
-      {quantity > 0 ? (
-        <>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={addToCartLoading || orderNowLoading}
-            className="btn btn--base"
-            style={{
-              display: "block",
-              width: "100%",
-            }}
-          >
-            {addToCartLoading ? "Adding..." : "Add To Cart"}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleOrderNow}
-            disabled={addToCartLoading || orderNowLoading}
-            className="btn btn--base"
-            style={{
-              display: "block",
-              width: "100%",
-            }}
-          >
-            {orderNowLoading ? "Processing..." : "Order Now"}
-          </button>
-        </>
-      ) : null}
-    </div>
-  </div>
-</section>
-
-
+                    <button
+                      type="button"
+                      onClick={handleOrderNow}
+                      disabled={addToCartLoading || orderNowLoading}
+                      className="btn btn--base"
+                      style={{ display: "block", width: "100%" }}
+                    >
+                      {orderNowLoading ? "Processing..." : "Order Now"}
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </section>
 
           <section className={styles.contentSection}>
             <div className={styles.leftContent}>
@@ -623,23 +746,228 @@ function decodeEntities(input) {
                 </button>
               </div>
 
-            <div className={styles.tabsCard}>
-              <div className={styles.galleryGrid}>
-                {images.map((image, index) => (
-                  <div
-                    key={`${image}-${index}`}
-                    className={styles.galleryItem}
-                  >
-                    <img    
-                      src={image}
-                      alt={`${product.alt || product.name} view ${index + 1}`}
-                      className={styles.galleryImage}
-                      loading="lazy"
+              <div className={styles.tabsCard}>
+                <div className={styles.tabsNav} role="tablist">
+                  {[
+                    ["specifications", "Specifications"],
+                    ["descriptions", "Descriptions"],
+                    ["support", "Support"],
+                    ["galleries", "Galleries"],
+                    ["video", "Video"],
+                    ["reviews", "Reviews"],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === key}
+                      className={`${styles.tabBtn} ${
+                        activeTab === key ? styles.tabBtnActive : ""
+                      }`}
+                      onClick={() => setActiveTab(key)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className={styles.tabContent}>
+                  {activeTab === "specifications" ? (
+                    <div
+                      className={styles.htmlContent}
+                      dangerouslySetInnerHTML={{ __html: description }}
                     />
-                  </div>
-                ))}
+                  ) : null}
+
+                  {activeTab === "descriptions" ? (
+                    <div
+                      className={styles.htmlContent}
+                      dangerouslySetInnerHTML={{
+                        __html: supportDescription || description,
+                      }}
+                    />
+                  ) : null}
+
+                  {activeTab === "support" ? (
+                    <div
+                      className={styles.htmlContent}
+                      dangerouslySetInnerHTML={{ __html: shortDescription }}
+                    />
+                  ) : null}
+
+                  {activeTab === "galleries" ? (
+                    <div className={styles.galleryGrid}>
+                      {images.map((image, index) => (
+                        <div key={`${image}-${index}`} className={styles.galleryItem}>
+                          <img
+                            src={image}
+                            alt={`${product.alt || product.name} view ${index + 1}`}
+                            className={styles.galleryImage}
+                            loading="lazy"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {activeTab === "video" ? (
+                    <div
+                      className={styles.htmlContent}
+                      dangerouslySetInnerHTML={{
+                        __html: productVideo || "<p>No video available.</p>",
+                      }}
+                    />
+                  ) : null}
+
+                  {activeTab === "reviews" ? (
+                    <div className={styles.reviewsWrap}>
+                      {reviews.length > 0 ? (
+                        <>
+                          <h2 className={styles.reviewTitle}>Customer Reviews</h2>
+
+                          <div className={styles.ratingSummary}>
+                            <div className={styles.averageRating}>
+                              {averageRating}
+                              <span>/5</span>
+                            </div>
+                            <div className={styles.reviewStars}>
+                              {renderStars(Math.round(Number(averageRating || 0)))}
+                            </div>
+                          </div>
+
+                          <div className={styles.reviewList}>
+                            {reviews.map((review, index) => (
+                              <div key={review.id || index} className={styles.reviewItem}>
+                                <div className={styles.reviewHeader}>
+                                  <span className={styles.reviewerName}>
+                                    {review?.user?.name ||
+                                      review?.guest_name ||
+                                      "Anonymous"}
+                                  </span>
+                                  <span className={styles.reviewDate}>
+                                    {review?.created_at
+                                      ? new Date(review.created_at).toLocaleDateString(
+                                          "en-US",
+                                          {
+                                            month: "short",
+                                            day: "2-digit",
+                                            year: "numeric",
+                                          }
+                                        )
+                                      : ""}
+                                  </span>
+                                </div>
+
+                                <div className={styles.reviewRating}>
+                                  {renderStars(review.rating)}
+                                </div>
+
+                                <p className={styles.reviewText}>{review.comment}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <p>No Ratings and reviews yet</p>
+                      )}
+
+                      <button
+                        type="button"
+                        className={styles.reviewToggleBtn}
+                        onClick={() => setShowReviewForm((prev) => !prev)}
+                      >
+                        {showReviewForm ? "Cancel" : "Write a Review"}
+                      </button>
+
+                      {showReviewForm ? (
+                        <div className={styles.reviewForm}>
+                          <h3 className={styles.formTitle}>Add Your Review</h3>
+
+                          <div className={styles.formGroup}>
+                            <label htmlFor="review-name">Your Name</label>
+                            <input
+                              id="review-name"
+                              type="text"
+                              name="guest_name"
+                              value={reviewForm.guest_name}
+                              onChange={(e) =>
+                                setReviewForm((p) => ({
+                                  ...p,
+                                  guest_name: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div className={styles.formGroup}>
+                            <label>Your Rating</label>
+                            <div className={styles.ratingInput}>
+                              {[5, 4, 3, 2, 1].map((star) => (
+                                <label key={star} className={styles.starLabel}>
+                                  <input
+                                    type="radio"
+                                    name="rating"
+                                    value={star}
+                                    checked={Number(reviewForm.rating) === star}
+                                    onChange={() =>
+                                      setReviewForm((p) => ({
+                                        ...p,
+                                        rating: star,
+                                      }))
+                                    }
+                                  />
+                                  <span>★</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className={styles.formGroup}>
+                            <label htmlFor="review-comment">Your Review</label>
+                            <textarea
+                              id="review-comment"
+                              name="comment"
+                              rows="5"
+                              value={reviewForm.comment}
+                              onChange={(e) =>
+                                setReviewForm((p) => ({
+                                  ...p,
+                                  comment: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            className={styles.submitBtn}
+                            onClick={handleSubmitReview}
+                            disabled={reviewSubmitting}
+                          >
+                            {reviewSubmitting ? "Submitting..." : "Submit Review"}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
+
+              {faqItems.length > 0 ? (
+                <section className={styles.productFaq} aria-labelledby="product-faq-heading">
+                  <h2 id="product-faq-heading" className={styles.productFaqTitle}>
+                    Frequently Asked Questions about {product.name}
+                  </h2>
+                  <div className={styles.productFaqList}>
+                    {faqItems.map((item, index) => (
+                      <details key={`${item.q}-${index}`} className={styles.productFaqItem} open={index === 0}>
+                        <summary className={styles.productFaqQuestion}>{item.q}</summary>
+                        <p className={styles.productFaqAnswer}>{item.a}</p>
+                      </details>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
             </div>
 
             <aside className={styles.relatedSidebar}>
@@ -657,15 +985,32 @@ function decodeEntities(input) {
                   <div className={styles.relatedList}>
                     {relatedProducts.map((related, index) => {
                       const relatedImage = getRelatedImage(related);
-                      const relatedRegularPrice = Number(related?.price ?? 0);
-                      const relatedOfferPrice = Number(related?.offer_price ?? 0);
-                      const relatedHasOffer =
-                        relatedRegularPrice > 0 &&
-                        relatedOfferPrice > 0 &&
-                        relatedOfferPrice < relatedRegularPrice;
-                      const relatedPrice = relatedHasOffer
-                        ? relatedOfferPrice
-                        : relatedRegularPrice;
+                      // Related PDP links default to the 3-year warranty where
+                      // assigned. Use its actual selling price, not unit_price
+                      // (MRP), which is only used for the strike-through.
+                      const threeYearOffer = Array.isArray(related?.warranty_offers)
+                        ? related.warranty_offers.find(
+                            (offer) =>
+                              offer?.warranty_type === "three_year" ||
+                              Number(offer?.warranty_years) === 3
+                          )
+                        : null;
+                      const isSelectedThreeYear =
+                        related?.warranty_type === "three_year" ||
+                        Number(related?.warranty_years) === 3 ||
+                        Number(related?.selected_warranty_years) === 3;
+                      const relatedPrice = [
+                        isSelectedThreeYear ? related?.price : null,
+                        threeYearOffer?.price,
+                        related?.three_year_warranty_price,
+                        related?.warranty_3_year_price,
+                        related?.discount_price,
+                        related?.sale_price,
+                        related?.price,
+                        related?.regular_price,
+                        related?.unit_price,
+                      ].find((value) => value !== null && value !== undefined && value !== "" && Number(value) > 0) ?? 0;
+                      const relatedMrp = mrpCompareAt(related, relatedPrice);
 
                       return (
                         <Link
@@ -693,10 +1038,8 @@ function decodeEntities(input) {
 
                             <p className={styles.relatedProductPrice}>
                               <span>{formatRelatedPrice(relatedPrice)}</span>
-                              {relatedHasOffer ? (
-                                <del className={styles.relatedOldPrice}>
-                                  {formatRelatedPrice(relatedRegularPrice)}
-                                </del>
+                              {relatedMrp !== null ? (
+                                <del className={styles.relatedOldPrice}>{formatRelatedPrice(relatedMrp)}</del>
                               ) : null}
                             </p>
                           </div>
@@ -724,7 +1067,10 @@ function decodeEntities(input) {
                 ) : null}
 
                 <div className={styles.quickSummaryRows}>
-
+                  <div className={styles.quickSummaryRow}>
+                    <span>Brand</span>
+                    <strong>{summaryBrand}</strong>
+                  </div>
 
                   <div className={styles.quickSummaryRow}>
                     <span>Category</span>
@@ -735,6 +1081,9 @@ function decodeEntities(input) {
                     <span>Price</span>
                     <strong className={styles.quickSummaryPrice}>
                       {formatRelatedPrice(summaryPrice)}
+                      {selectedOriginalPrice !== null ? (
+                        <del className={styles.quickSummaryOldPrice}>{formatRelatedPrice(selectedOriginalPrice)}</del>
+                      ) : null}
                     </strong>
                   </div>
 
@@ -742,18 +1091,18 @@ function decodeEntities(input) {
                     <span>Stock</span>
                     <strong
                       className={
-                        isInStock
+                        quantity > 0
                           ? styles.quickSummaryStockIn
                           : styles.quickSummaryStockOut
                       }
                     >
-                      {isInStock ? "In Stock" : "Out Of Stock"}
+                      {quantity > 0 ? "In Stock" : "Out Of Stock"}
                     </strong>
                   </div>
 
                   <div className={styles.quickSummaryRow}>
                     <span>Warranty</span>
-                    <strong>{summaryWarranty}</strong>
+                    <strong>{getProductWarranty(product)}</strong>
                   </div>
                 </div>
 

@@ -22,20 +22,48 @@ function shippingLabel(value) {
   return value || "Not provided";
 }
 
-function getOrderTotal(orderData) {
+function readAmount(...values) {
+  for (const value of values) {
+    if (value === null || value === undefined || value === "") continue;
+    const amount = Number(value);
+    if (Number.isFinite(amount) && amount >= 0) return amount;
+  }
+  return null;
+}
+
+function getOrderAmounts(orderData) {
   const details = orderData?.orderDetails || {};
-  return (
-    details.total ||
-    details.grand_total ||
-    details.payable_amount ||
-    details.amount ||
-    orderData?.response?.data?.order?.total ||
-    orderData?.response?.order?.total ||
-    orderData?.response?.total ||
-    orderData?.response?.data?.total ||
-    orderData?.subtotal ||
-    0
+  const responseOrder = orderData?.response?.data?.order || orderData?.response?.order || {};
+  const subtotal = readAmount(
+    details.subtotal, responseOrder.subtotal, orderData?.subtotal
   );
+  const shipping = readAmount(
+    details.shipping_cost,
+    details.delivery_charge,
+    responseOrder.shipping_cost,
+    responseOrder.delivery_charge,
+    orderData?.shippingCost
+  );
+
+  // The order total returned by Laravel is authoritative and already includes
+  // delivery. Only calculate subtotal + delivery for older/missing responses.
+  const confirmedTotal = readAmount(
+    details.total,
+    details.grand_total,
+    details.payable_amount,
+    details.amount,
+    responseOrder.total,
+    responseOrder.grand_total,
+    orderData?.response?.total,
+    orderData?.response?.data?.total,
+    orderData?.orderTotal
+  );
+
+  return {
+    subtotal,
+    shipping,
+    total: confirmedTotal ?? ((subtotal ?? 0) + (shipping ?? 0)),
+  };
 }
 
 function getLinePrice(item) {
@@ -105,7 +133,10 @@ export default function OrderSuccessClient() {
   }
 
   const customer = orderData.customer || {};
-  const total = getOrderTotal(orderData);
+  const { subtotal, shipping, total } = getOrderAmounts(orderData);
+  const selectedShipping = orderData.shippingType ||
+    orderData?.orderDetails?.shipping_type ||
+    orderData?.response?.data?.order?.shipping_type;
 
   return (
     <>
@@ -126,8 +157,10 @@ export default function OrderSuccessClient() {
               <div className={styles.infoList}>
                 <div><span>Order Number</span><strong>{orderData.orderNumber || "Pending"}</strong></div>
                 <div><span>Payment Method</span><strong>Cash on Delivery</strong></div>
-                <div><span>Shipping Method</span><strong>{shippingLabel(orderData.shippingType)}</strong></div>
-                <div><span>Total</span><strong>{formatPrice(total)}</strong></div>
+                <div><span>Shipping Method</span><strong>{shippingLabel(selectedShipping)}</strong></div>
+                {subtotal !== null && <div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>}
+                {shipping !== null && <div><span>Delivery Charge</span><strong>{formatPrice(shipping)}</strong></div>}
+                <div><span>Total (Including Delivery)</span><strong>{formatPrice(total)}</strong></div>
               </div>
             </section>
 
