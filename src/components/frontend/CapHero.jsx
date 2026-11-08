@@ -226,7 +226,7 @@ export default function CapHero({ slides = [] }) {
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
       >
-        <div className={styles.ring} aria-hidden="true" />
+        
         {items.map((item, index) => {
           const offset = offsetFor(index);
           const centered = offset === 0;
