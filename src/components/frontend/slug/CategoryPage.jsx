@@ -2,7 +2,7 @@
 
 
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
 
@@ -526,6 +526,24 @@ function getFinalFaqItems(category, isSearch) {
 
 
 
+// The Laravel brand facet is derived from product specifications. Its
+// requestedBrands() method prefers brands, then brand, then brand_id.
+function selectedSpecificationBrands(params) {
+  const sources = [
+    [...params.getAll("brands"), ...params.getAll("brands[]")],
+    [...params.getAll("brand"), ...params.getAll("brand[]")],
+    params.getAll("brand_id"),
+  ];
+  const selected = sources.find((values) => values.some((v) => String(v || "").trim())) || [];
+  const unique = new Map();
+  selected.flatMap((value) => String(value || "").split(","))
+    .map((value) => value.trim()).filter(Boolean).forEach((value) => {
+      const key = value.toLocaleLowerCase();
+      if (!unique.has(key)) unique.set(key, value);
+    });
+  return Array.from(unique.values());
+}
+
 export default function CategoryPage({
 
   category = {},
@@ -541,6 +559,8 @@ export default function CategoryPage({
   const pathname = usePathname();
 
   const searchParams = useSearchParams();
+  const searchParamsKey = searchParams.toString();
+  const pendingParams = useRef(null);
 
 
 
@@ -566,9 +586,9 @@ export default function CategoryPage({
 
   const products = category.products || {};
 
-  const productItems = products.data || [];
+  const productItems = Array.isArray(products.data) ? products.data : [];
 
-  const brands = category.brands || [];
+  const brands = Array.isArray(category.brands) ? category.brands : [];
 
   const attributeGroups = normalizeAttributeGroups(category);
 
@@ -592,47 +612,10 @@ export default function CategoryPage({
 
 
 
-  const selectedBrands = useMemo(() => {
-
-    const rawValues = [
-
-      ...searchParams.getAll("brands"),
-
-      ...searchParams.getAll("brand"),
-
-      ...searchParams.getAll("brand_id"),
-
-    ];
-
-
-
-    const unique = new Map();
-
-
-
-    rawValues
-
-      .flatMap((value) => String(value || "").split(","))
-
-      .map((value) => value.trim())
-
-      .filter(Boolean)
-
-      .forEach((value) => {
-
-        const key = value.toLocaleLowerCase();
-
-        if (!unique.has(key)) unique.set(key, value);
-
-      });
-
-
-
-    return Array.from(unique.values());
-
-  }, [searchParams]);
-
-
+  const selectedBrands = useMemo(
+    () => selectedSpecificationBrands(searchParams),
+    [searchParamsKey]
+  );
 
   const displayBrands = useMemo(() => {
 
@@ -709,6 +692,16 @@ export default function CategoryPage({
     maxPrice: currentMaxPrice,
 
   });
+
+  useEffect(() => {
+    // Do not reset a newer pending selection when an earlier URL commits.
+    if (pendingParams.current && pendingParams.current.toString() !== searchParamsKey) return;
+    pendingParams.current = null;
+    setPriceForm({
+      minPrice: searchParams.get("minPrice") || "10",
+      maxPrice: searchParams.get("maxPrice") || "700000",
+    });
+  }, [searchParamsKey]);
 
 
 
@@ -809,40 +802,38 @@ export default function CategoryPage({
 
 
   function updateParams(updates = {}, resetPage = true) {
+    // Starting from a pending URL rather than stale committed searchParams
+    // prevents fast successive brand/filter clicks from undoing each other.
+    const params = new URLSearchParams(pendingParams.current?.toString() ?? searchParamsKey);
 
-    const params = new URLSearchParams(searchParams.toString());
-
-
+    const changesBrand = ["brand", "brands", "brand_id", "brand[]", "brands[]"]
+      .some((key) => Object.prototype.hasOwnProperty.call(updates, key));
+    if (changesBrand) {
+      // The Laravel resolver prioritizes the brands parameter. Remove all
+      // older aliases so they cannot override the selected specification brands.
+      for (const key of ["brand", "brands", "brand_id", "brand[]", "brands[]"]) {
+        params.delete(key);
+      }
+    }
 
     Object.entries(updates).forEach(([key, value]) => {
-
       if (value === undefined || value === null || value === "") {
-
         params.delete(key);
-
       } else {
-
         params.set(key, String(value));
-
       }
-
     });
-
-
 
     if (resetPage) params.delete("page");
 
-
-
     const queryString = params.toString();
-
-
-
+    if (queryString === searchParamsKey) {
+      pendingParams.current = null;
+      return;
+    }
+    pendingParams.current = params;
     router.push(queryString ? `${pathname}?${queryString}` : pathname);
-
   }
-
-
 
   function submitPriceFilter(event) {
 
@@ -863,72 +854,36 @@ export default function CategoryPage({
 
 
   function toggleBrand(brandName) {
-
     const normalized = String(brandName || "").trim();
-
     if (!normalized) return;
 
-
-
+    const current = selectedSpecificationBrands(pendingParams.current || searchParams);
     const key = normalized.toLocaleLowerCase();
+    const nextBrands = current.some((brand) => brand.toLocaleLowerCase() === key)
+      ? current.filter((brand) => brand.toLocaleLowerCase() !== key)
+      : [...current, normalized];
 
-    const nextBrands = selectedBrandKeys.has(key)
-
-      ? selectedBrands.filter(
-
-          (brand) => brand.toLocaleLowerCase() !== key
-
-        )
-
-      : [...selectedBrands, normalized];
-
-
-
-    updateParams({
-
-      brand: nextBrands.length > 0 ? nextBrands.join(",") : "",
-
-      brand_id: "",
-
-      brands: "",
-
-    });
-
+    updateParams({ brand: nextBrands.join(",") });
   }
-
-
 
   function clearBrandFilter() {
 
-    updateParams({
-
-      brand: "",
-
-      brand_id: "",
-
-      brands: "",
-
-    });
+    updateParams({ brand: "" });
 
   }
 
 
 
   function clearFilters() {
-
+    const previous = pendingParams.current || searchParams;
     const keep = new URLSearchParams();
-
-
-
-    if (query) keep.set("query", query);
-
-
-
+    // Preserve the existing "clear filters but keep search" behavior.
+    const currentQuery = previous.get("query") || previous.get("q") || "";
+    if (currentQuery) keep.set("query", currentQuery);
+    setPriceForm({ minPrice: "10", maxPrice: "700000" });
+    pendingParams.current = keep;
     router.push(keep.toString() ? `${pathname}?${keep.toString()}` : pathname);
-
   }
-
-
 
   function getPaginationUrl(pageNumber) {
 

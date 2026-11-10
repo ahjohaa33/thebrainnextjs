@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import Shopview from "./Shopview";
 import { apiUrl } from "@/lib/config";
-import { buildShopQuery } from "./shop-query.mjs";
+import { buildShopQuery, isShopCatalogPayload } from "./shop-query.mjs";
 import { buildMetadata, shouldNoindex } from "@/lib/seo";
 
 // Shop inventory and brand filters must not be served from a five-minute cache.
@@ -33,7 +33,8 @@ async function getInitialShopData(searchParams = {}) {
     });
 
     if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    return isShopCatalogPayload(data) ? data : null;
   } catch {
     return null;
   }

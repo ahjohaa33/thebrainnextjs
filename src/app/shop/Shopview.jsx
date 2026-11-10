@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiRequest, API_BASE_URL } from '@/lib/api';
 import styles from './shopPage.module.css';
-import { buildShopQuery, parseBrandList, readShopFilters } from './shop-query.mjs';
+import { buildShopQuery, isShopCatalogPayload, parseBrandList, readShopFilters } from './shop-query.mjs';
 
 const LARAVEL_ASSET_BASE_URL = API_BASE_URL.replace(/\/api\/v\d+$/i, '').replace(/\/api$/i, '');
 
@@ -106,7 +106,12 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
   // Only fall back to the browser proxy if the server fetch failed.
   useEffect(() => {
     const controller = new AbortController();
-    pendingFilters.current = null;
+    // Do not discard a newer filter selection when an older navigation
+    // commits first. Consecutive brand clicks must remain additive.
+    if (!pendingFilters.current ||
+        buildShopQuery(pendingFilters.current).toString() === queryKey) {
+      pendingFilters.current = null;
+    }
     setSearchInput(filters.query);
     setPriceInputs({
       minPrice: filters.minPrice || 10,
@@ -114,7 +119,21 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
     });
 
     const acceptResult = (result) => {
-      setProducts(Array.isArray(result?.products?.data) ? result.products.data : []);
+      if (!isShopCatalogPayload(result)) {
+        throw new Error('Shop API returned an unexpected product response. Please retry.');
+      }
+      // Products still exist, but the requested page disappeared (e.g. stock
+      // changed while the customer was on page 3). Return to the first page
+      // instead of displaying a misleading "No Products Matched" message.
+      if (result.products.data.length === 0 &&
+          Number(result.products.total) > 0 &&
+          Number(result.products.current_page) > Number(result.products.last_page) &&
+          Number(result.products.current_page) > 1) {
+        const firstPage = buildShopQuery({ ...filters, page: 1 }).toString();
+        router.replace(`/shop${firstPage ? `?${firstPage}` : ''}`, { scroll: false });
+        return;
+      }
+      setProducts(result.products.data);
       setBrands(Array.isArray(result?.brands) ? result.brands : []);
       setCategories(Array.isArray(result?.categories) ? result.categories : []);
       setPagination(initialPagination(result, filters.limit));
@@ -135,11 +154,10 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
       })
       .catch((error) => {
         if (controller.signal.aborted) return;
-        setProducts([]);
-        setPagination(initialPagination(null, filters.limit));
+        // Keep the last valid data; an API failure is NOT a zero-product match.
         setMessage({
           type: 'error',
-          text: error.message || 'Something went wrong while loading products.',
+          text: `Could not refresh products. ${error.message || 'Please try again.'} Previous results may still be shown.`,
         });
         setLoading(false);
       });
@@ -631,13 +649,13 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
                     );
                   })}
                 </div>
-              ) : (
+              ) : message?.type === 'error' ? null : (
                 <div className={styles.emptyState}>
                   <strong>⚠ No Products Matched!</strong>
                 </div>
               )}
 
-              {pagination.last_page > 1 && (
+              {message?.type !== 'error' && pagination.last_page > 1 && (
                 <nav className={styles.pagination} aria-label="Product pagination">
                   <button
                     type="button"

@@ -24,7 +24,8 @@ function normalizeSearchParams(input) {
   const output = {};
   Object.entries(input).forEach(([key, value]) => {
     if (Array.isArray(value)) {
-      if (value.length > 0) output[key] = String(value[0]);
+      const items = value.filter((item) => typeof item === "string" && item.trim() !== "");
+      if (items.length > 0) output[key] = items;
       return;
     }
     if (typeof value === "string") output[key] = value;
@@ -35,7 +36,17 @@ function normalizeSearchParams(input) {
 function buildQueryString(searchParams = {}) {
   const params = new URLSearchParams();
   Object.entries(searchParams).forEach(([key, value]) => {
-    if (typeof value === "string" && value.trim() !== "") params.set(key, value);
+    // Next.js represents repeated URL parameters as arrays. Laravel accepts
+    // specification brands as brand[]=... or brands[]=..., not an arbitrary
+    // last-wins scalar value. Preserve every brand on the request.
+    const values = Array.isArray(value) ? value : [value];
+    const parameter = Array.isArray(value) && values.length > 1 &&
+      (key === "brand" || key === "brands") ? `${key}[]` : key;
+    values.forEach((item) => {
+      if (typeof item === "string" && item.trim() !== "") {
+        params.append(parameter, item);
+      }
+    });
   });
   const query = params.toString();
   return query ? `?${query}` : "";
@@ -55,14 +66,28 @@ const getSlugData = cache(async function getSlugData(slug, searchParamsKey = "")
   const qs = buildQueryString(parsedSearchParams);
   const url = apiUrl(`/product-or-category/${encodeURIComponent(slug)}${qs}`);
 
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-    next: { revalidate: 300, tags: ["product", "category", `slug:${slug}`] },
-  });
+  // Filtered listing URLs need fresh, query-specific data. Unfiltered
+  // product and category URLs retain their existing five-minute cache.
+  const isFiltered = qs !== "";
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      ...(isFiltered
+        ? { cache: "no-store" }
+        : { next: { revalidate: 300, tags: ["product", "category", `slug:${slug}`] } }),
+    });
 
-  if (res.status === 404) return null;
-  if (!res.ok) return { type: "error", status: res.status };
-  return await res.json();
+    if (res.status === 404) return null;
+    if (!res.ok) return { type: "error", status: res.status };
+    const data = await res.json();
+    if (!data || typeof data !== "object" ||
+        (data.type === "category" && !Array.isArray(data.category?.products?.data))) {
+      return { type: "error", status: "invalid catalog response" };
+    }
+    return data;
+  } catch {
+    return { type: "error", status: "unavailable" };
+  }
 });
 
 function stableKey(value) {
@@ -148,6 +173,19 @@ export default async function SlugPage(props) {
 
   if (data.redirect_to) redirect(data.redirect_to);
 
+  // A once-valid pagination link can become out of range after inventory
+  // changes. There are still matching products; show page 1, not an empty grid.
+  if (data.type === "category" && data.category?.products &&
+      Number(data.category.products.total) > 0 &&
+      Array.isArray(data.category.products.data) &&
+      data.category.products.data.length === 0 &&
+      Number(data.category.products.current_page) > Number(data.category.products.last_page) &&
+      Number(data.category.products.current_page) > 1) {
+    const correctedParams = { ...currentSearchParams };
+    delete correctedParams.page;
+    redirect(`/${encodeURIComponent(slug)}${buildQueryString(correctedParams)}`);
+  }
+
   const jsonLd = [];
 
 
@@ -190,6 +228,9 @@ export default async function SlugPage(props) {
         currentSearchParams.maxPrice ||
         currentSearchParams.brand ||
         currentSearchParams.brand_id ||
+        currentSearchParams.brands ||
+        currentSearchParams["brands[]"] ||
+        currentSearchParams["brand[]"] ||
         currentSearchParams.sort ||
         currentSearchParams.availability ||
         currentSearchParams.status

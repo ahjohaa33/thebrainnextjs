@@ -28,6 +28,24 @@ function readValue(source, key) {
     : source?.[key];
 }
 
+function readValues(source, key) {
+  const raw = source && typeof source.getAll === 'function'
+    ? source.getAll(key)
+    : source?.[key];
+  return Array.isArray(raw) ? raw : raw == null ? [] : [raw];
+}
+
+function readBrands(source) {
+  // Laravel requestedBrands() prioritizes brands, then brand, then brand_id.
+  // Bracketed names are how URLSearchParams represents Laravel array inputs.
+  for (const aliases of [['brands', 'brands[]'], ['brand', 'brand[]'], ['brand_id']]) {
+    const values = aliases.flatMap((key) => readValues(source, key));
+    const parsed = values.flatMap((value) => parseBrandList(value));
+    if (parsed.length) return parseBrandList(parsed.join(','));
+  }
+  return [];
+}
+
 function positiveInt(value, fallback, maximum) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 1
@@ -43,7 +61,7 @@ export function readShopFilters(source = {}) {
     limit: positiveInt(text('limit'), DEFAULTS.limit, 100),
     sort: text('sort') || DEFAULTS.sort,
     availability: text('availability'),
-    brand: text('brand'),
+    brand: readBrands(source).join(','),
     minPrice: text('minPrice'),
     maxPrice: text('maxPrice'),
     query: text('query'),
@@ -73,4 +91,13 @@ export function parseBrandList(value) {
     if (key && !names.has(key)) names.set(key, name);
   }
   return Array.from(names.values());
+}
+
+// An HTTP 200 is not sufficient: an error/HTML payload must never be shown
+// as a genuine zero-product result. Both server and client use this contract.
+export function isShopCatalogPayload(value) {
+  return value !== null && typeof value === 'object' &&
+    !Array.isArray(value) && value.products !== null &&
+    typeof value.products === 'object' &&
+    Array.isArray(value.products.data);
 }
