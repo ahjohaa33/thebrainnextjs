@@ -436,11 +436,21 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
                             ? styles.activeCategory
                             : ''
                         }`}
-                        onClick={() =>
+                        onClick={() => {
+                          // A category selection starts a fresh category view;
+                          // product facets are storewide and must not silently
+                          // override the category the customer just selected.
+                          setSearchInput('');
+                          setPriceInputs({ minPrice: 10, maxPrice: 100000 });
                           applyFilters({
                             category_id: category.id,
-                          })
-                        }
+                            brand: '',
+                            minPrice: '',
+                            maxPrice: '',
+                            availability: '',
+                            query: '',
+                          });
+                        }}
                       >
                         <span>{category.name}</span>
                         <small>{category.products_count || 0}</small>

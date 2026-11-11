@@ -245,10 +245,13 @@ export function buildMetadata({
 export function shouldNoindex({ pathname, searchParams } = {}) {
   const sp = searchParams || {};
   // Faceted, sorted and internal-search URLs do not have standalone SEO value.
-  if (['query', 'q', 'search', 'brand', 'brand_id', 'category_id', 'sort',
-       'minPrice', 'maxPrice', 'availability', 'status', 'limit',
+  if (['query', 'q', 'search', 'brand', 'brands', 'brand[]', 'brands[]',
+       'brand_id', 'category_id', 'sort', 'minPrice', 'maxPrice',
+       'availability', 'status', 'limit',
        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
       .some(key => Boolean(sp[key]))) return true;
+  if (Object.keys(sp).some(key => key.startsWith('filters[') && Boolean(sp[key])))
+    return true;
   if (pathname && /^\/(cart|checkout|order-success)(\/|$)/.test(pathname))
     return true;
   return false;

@@ -46,6 +46,16 @@ function readBrands(source) {
   return [];
 }
 
+// A selected product facet searches the complete store. Category is an
+// initial browsing context, not an implicit restriction on brand, price,
+// availability or text search. Explicit category-only browsing still works.
+export function hasGlobalProductFilters(source = {}) {
+  if (readBrands(source).length > 0) return true;
+  return ['minPrice', 'maxPrice', 'availability', 'status', 'query', 'q']
+    .some((key) => readValues(source, key)
+      .some((value) => String(value ?? '').trim() !== ''));
+}
+
 function positiveInt(value, fallback, maximum) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 1
@@ -60,12 +70,12 @@ export function readShopFilters(source = {}) {
     page: positiveInt(text('page'), DEFAULTS.page, 1000000),
     limit: positiveInt(text('limit'), DEFAULTS.limit, 100),
     sort: text('sort') || DEFAULTS.sort,
-    availability: text('availability'),
+    availability: text('availability') || text('status'),
     brand: readBrands(source).join(','),
     minPrice: text('minPrice'),
     maxPrice: text('maxPrice'),
-    query: text('query'),
-    category_id: text('category_id'),
+    query: text('query') || text('q'),
+    category_id: hasGlobalProductFilters(source) ? '' : text('category_id'),
   };
 }
 
@@ -81,6 +91,15 @@ export function buildShopQuery(source = {}) {
 
   // Laravel also defaults to 12 products and a low-to-high price order.
   return params;
+}
+
+// Category pages have a 30-product default, unlike /shop (12). Reuse the
+// same query serialization but deliberately omit category_id so the Laravel
+// /shop endpoint can return products from every category.
+export function buildCategoryGlobalShopQuery(source = {}) {
+  const filters = readShopFilters(source);
+  const limit = positiveInt(firstValue(readValue(source, 'limit')), 30, 100);
+  return buildShopQuery({ ...filters, limit, category_id: '' });
 }
 
 export function parseBrandList(value) {

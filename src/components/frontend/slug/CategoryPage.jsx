@@ -552,6 +552,8 @@ export default function CategoryPage({
 
   slug = "",
 
+  globalCatalog = false,
+
 }) {
 
   const router = useRouter();
@@ -590,7 +592,14 @@ export default function CategoryPage({
 
   const brands = Array.isArray(category.brands) ? category.brands : [];
 
-  const attributeGroups = normalizeAttributeGroups(category);
+  // Do not show the Fabric specification filter on category pages.
+  // Other specification filters and the Shop page remain unchanged.
+  const attributeGroups = normalizeAttributeGroups(category).filter(
+    (attribute) =>
+      ![attribute.key, attribute.name].some(
+        (value) => String(value ?? "").trim().toLowerCase() === "fabric"
+      )
+  );
 
 
 
@@ -753,9 +762,9 @@ export default function CategoryPage({
 
       viewItemList({
 
-        listName: category.name || "Category",
+        listName: globalCatalog ? "Shop" : category.name || "Category",
 
-        listId: category.slug || slug,
+        listId: globalCatalog ? "shop" : category.slug || slug,
 
         products: productItems.map(normalizeProductForBox),
 
@@ -797,7 +806,7 @@ export default function CategoryPage({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
 
-  }, [category?.slug || slug]);
+  }, [category?.slug || slug, globalCatalog]);
 
 
 
@@ -1212,6 +1221,16 @@ export default function CategoryPage({
 
 
 
+                    <label className={styles.filterOption}>
+                      <input
+                        type="radio"
+                        name={`filters[${attribute.key}]`}
+                        checked={!currentValue}
+                        onChange={() => updateParams({ [`filters[${attribute.key}]`]: "" })}
+                      />
+                      <span>Any {attribute.name}</span>
+                    </label>
+
                     {attribute.values.map((value) => (
 
                       <label
@@ -1619,6 +1638,7 @@ export default function CategoryPage({
             <div className={styles.resultBar}>
 
               Showing {productItems.length} of {products.total || 0} products
+              {globalCatalog ? " across all categories" : ""}
 
             </div>
 
@@ -1638,9 +1658,9 @@ export default function CategoryPage({
 
                     baseUrl={baseUrl}
 
-                    listName={category.name || "Category"}
+                    listName={globalCatalog ? "Shop" : category.name || "Category"}
 
-                    listId={category.slug || slug}
+                    listId={globalCatalog ? "shop" : category.slug || slug}
 
                     listIndex={index + 1}
 
@@ -1840,7 +1860,7 @@ export default function CategoryPage({
 
                 <div className={styles.priceTableHeader}>
 
-                  <h2>{category.name || "Price"} Price Table (BD)</h2>
+                  <h2>{globalCatalog ? "Filtered Products" : category.name || "Price"} Price Table (BD)</h2>
 
                   <small>Prices auto-update from product pages.</small>
 

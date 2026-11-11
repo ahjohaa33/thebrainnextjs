@@ -7,6 +7,11 @@ import CategoryPage from "@/components/frontend/slug/CategoryPage";
 import JsonLd from "@/components/seo/JsonLd";
 import { buildMetadata, shouldNoindex, SITE_URL } from "@/lib/seo";
 import {
+  buildCategoryGlobalShopQuery,
+  hasGlobalProductFilters,
+  isShopCatalogPayload,
+} from "@/app/shop/shop-query.mjs";
+import {
   buildBreadcrumbSchema,
   buildProductSchema,
   buildItemListSchema,
@@ -64,10 +69,17 @@ const getSlugData = cache(async function getSlugData(slug, searchParamsKey = "")
   }
 
   const qs = buildQueryString(parsedSearchParams);
-  const url = apiUrl(`/product-or-category/${encodeURIComponent(slug)}${qs}`);
+  const globalProductFilters = hasGlobalProductFilters(parsedSearchParams);
 
-  // Filtered listing URLs need fresh, query-specific data. Unfiltered
-  // product and category URLs retain their existing five-minute cache.
+  // The slug resolver provides category identity, metadata and brand facets.
+  // When a product filter is active, fetch that context without its original
+  // category-scoped filters, then fetch the actual result grid from /shop.
+  // Product-detail slugs always retain their existing resolver behavior.
+  const contextQuery = globalProductFilters ? "" : qs;
+  const url = apiUrl(`/product-or-category/${encodeURIComponent(slug)}${contextQuery}`);
+
+  // Filtered listing URLs need fresh data. Unfiltered product/category URLs
+  // retain the existing five-minute cache and revalidation tags.
   const isFiltered = qs !== "";
   try {
     const res = await fetch(url, {
@@ -84,7 +96,32 @@ const getSlugData = cache(async function getSlugData(slug, searchParamsKey = "")
         (data.type === "category" && !Array.isArray(data.category?.products?.data))) {
       return { type: "error", status: "invalid catalog response" };
     }
-    return data;
+
+    if (data.type !== "category" || !globalProductFilters) return data;
+
+    const shopQuery = buildCategoryGlobalShopQuery(parsedSearchParams).toString();
+    const shopResponse = await fetch(apiUrl(`/shop?${shopQuery}`), {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!shopResponse.ok) return { type: "error", status: shopResponse.status };
+
+    const shopData = await shopResponse.json();
+    if (!isShopCatalogPayload(shopData)) {
+      return { type: "error", status: "invalid shop catalog response" };
+    }
+
+    return {
+      ...data,
+      globalCatalog: true,
+      category: {
+        ...data.category,
+        products: shopData.products,
+        // The category price table previously mirrored the paginated product
+        // grid; keep it in sync when the grid is replaced with global results.
+        priceTableProducts: shopData.products.data,
+      },
+    };
   } catch {
     return { type: "error", status: "unavailable" };
   }
@@ -212,14 +249,17 @@ export default async function SlugPage(props) {
       ])
     );
 
-    const productItems = category.products?.data || [];
-    jsonLd.push(
-      buildItemListSchema({
-        name: category.name,
-        products: productItems,
-        pathname: `/${slug}`,
-      })
-    );
+    // Do not describe storewide filtered products as members of this category.
+    if (!data.globalCatalog) {
+      const productItems = category.products?.data || [];
+      jsonLd.push(
+        buildItemListSchema({
+          name: category.name,
+          products: productItems,
+          pathname: `/${slug}`,
+        })
+      );
+    }
 
     const isSearchPage = Boolean(
       currentSearchParams.query ||
@@ -258,6 +298,7 @@ export default async function SlugPage(props) {
           category={data.category}
           baseUrl={LARAVEL_BASE_URL}
           slug={slug}
+          globalCatalog={Boolean(data.globalCatalog)}
         />
       ) : (
         <main style={{ padding: "40px 20px" }}>
