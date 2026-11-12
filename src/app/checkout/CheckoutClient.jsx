@@ -336,6 +336,20 @@ export default function CheckoutClient() {
     });
 
     try {
+      // Always re-read the user's real Laravel cart immediately before submission.
+      // Never trust the ISR catalog snapshot as stock/price authority.
+      const latestCart = await refreshCart();
+      const latestItems = latestCart?.data?.items;
+      if (Array.isArray(latestItems)) {
+        for (const item of latestItems) {
+          const available = item?.current_stock ?? item?.available_stock;
+          if (available != null && Number.isFinite(Number(available)) &&
+              Number(item.quantity || 0) > Number(available)) {
+            throw new Error(`Insufficient stock for ${item.product?.name || item.name || 'a product'}. Please update your cart.`);
+          }
+        }
+      }
+      // Laravel MUST revalidate stock and price atomically within POST /checkout.
       // Laravel endpoint: POST /api/v1/checkout through the Next proxy.
       const data = await apiRequest("/checkout", {
         method: "POST",

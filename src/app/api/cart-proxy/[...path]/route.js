@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { laravelFetch } from "@/lib/laravel";
 
 const RAW_LARAVEL_BASE_URL =
   process.env.NEXT_PUBLIC_LARAVEL_APP_URL ||
@@ -74,6 +75,22 @@ async function proxyCartRequest(request, context) {
   const method = request.method.toUpperCase();
   const targetUrl = buildLaravelUrl(request, params);
 
+  const segments = (Array.isArray(params.path) ? params.path : []);
+  const route = segments.join('/');
+  const permitted = (
+    (route === 'cart' && method === 'GET') ||
+    (route === 'cart/add' && method === 'POST') ||
+    (route === 'cart/clear' && method === 'DELETE') ||
+    (route === 'cart/shipping' && method === 'POST') ||
+    (route === 'checkout' && method === 'POST') ||
+    (/^cart\/(?!add$|clear$|shipping$)[a-z0-9_-]{1,64}$/i.test(route) && ['PATCH', 'PUT', 'DELETE'].includes(method))
+  );
+  if (!permitted) {
+    return NextResponse.json({ message: 'Cart operation not allowed.' }, {
+      status: 405, headers: { 'Allow': 'GET, POST, PATCH, PUT, DELETE', 'Cache-Control': 'no-store' },
+    });
+  }
+
   // Rejected by the traversal / containment guard in buildLaravelUrl.
   if (!targetUrl) {
     return NextResponse.json(
@@ -105,6 +122,8 @@ async function proxyCartRequest(request, context) {
   headers.set("Accept", accept || "application/json");
   if (contentType) headers.set("Content-Type", contentType);
   if (authorization) headers.set("Authorization", authorization);
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) headers.set("X-Forwarded-For", forwardedFor);
   if (cartToken) headers.set("X-Cart-Token", cartToken);
   if (cookieHeader) headers.set("Cookie", cookieHeader);
 
@@ -121,7 +140,11 @@ async function proxyCartRequest(request, context) {
   }
 
   try {
-    const laravelResponse = await fetch(targetUrl, init);
+    // Cart/checkout are private and non-cacheable. Do not retry order writes.
+    // A longer timeout on mutations prevents premature client retry/duplicate orders.
+    const laravelResponse = await laravelFetch(targetUrl, init, {
+      public: false, timeoutMs: method === 'GET' ? 4000 : 15000,
+    });
     const responseText = await laravelResponse.text();
 
     const responseHeaders = new Headers();

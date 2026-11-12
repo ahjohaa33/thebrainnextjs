@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { API_BASE_URL } from "@/lib/api";
+import { apiUrl } from "@/lib/config";
+import { laravelFetch } from "@/lib/laravel";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { buildMetadata, stripMeta, siteUrl, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { buildBreadcrumbSchema } from "@/lib/schema";
@@ -9,9 +10,25 @@ import JsonLd from "@/components/seo/JsonLd";
 import blogStyles from "../blogPage.module.css";
 import styles from "./blogPostPage.module.css";
 
-// Always fetch fresh from the API; never cache — matches /blog listing page.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Tagged ISR; webhook invalidates blog posts when Laravel content changes.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  try {
+    const response = await laravelFetch(apiUrl('/blog?page=1'), {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 3600, tags: ['blog'] },
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return (data?.posts?.data || []).filter((post) => typeof post?.slug === 'string' &&
+      /^[a-z0-9][a-z0-9_-]*$/i.test(post.slug)).slice(0, 50)
+      .map((post) => ({ slug: post.slug }));
+  } catch (error) {
+    console.warn('[blog] Pre-render seed unavailable:', error?.message);
+    return [];
+  }
+}
 
 // BlogPosting JSON-LD for the single post. Built here (rather than adding a
 // new export to lib/schema.js) so this feature is a self-contained drop-in
@@ -134,12 +151,12 @@ function extractRelated(payload) {
 }
 
 async function getPostData(slug) {
-  const url = `${API_BASE_URL}/blog/${encodeURIComponent(slug)}`;
+  const url = apiUrl(`/blog/${encodeURIComponent(slug)}`);
 
-  const response = await fetch(url, {
+  const response = await laravelFetch(url, {
     method: "GET",
     headers: { Accept: "application/json" },
-    cache: "no-store",
+    next: { revalidate: 3600, tags: ["blog", `blog:${slug.toLowerCase()}`] },
   });
 
   if (response.status === 404) return null;
@@ -155,10 +172,10 @@ async function getPostData(slug) {
 // throws — the page still renders fine without it.
 async function getCategories() {
   try {
-    const response = await fetch(`${API_BASE_URL}/blog`, {
+    const response = await laravelFetch(apiUrl("/blog"), {
       method: "GET",
       headers: { Accept: "application/json" },
-      cache: "no-store",
+      next: { revalidate: 3600, tags: ["blog"] },
     });
     if (!response.ok) return [];
     const data = await response.json();

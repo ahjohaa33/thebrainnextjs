@@ -1,115 +1,55 @@
-# LCP / mobile-performance changes
+# The Brain BD Next.js — production reliability update (2026-11-12)
 
-Drop-in replacement for the `src/` folder. Below is what changed and one
-small manual step you need to do before building.
+This is a **changed-files-only patch**, based on the uploaded `thebrainnextjs.zip`. Existing Laravel JSON response structures and browser cart token behavior have been retained. Changes are intended for **Next.js 16.3.x / React 19**.
 
----
+## Implemented in the Next.js archive
 
-## 1. Manual step (required before `next build`)
+- Removed duplicate `next.config.mjs` and per-request nonce middleware (`src/middleware.js`). Security headers and a *static, compatible* CSP now live in `next.config.js`. `layout.js` no longer calls `headers()`.
+- Added `src/lib/laravel.js` for **all current server-side Laravel fetches**: 4-second timeout **per GET attempt**, up to two GET retries with randomized backoff and capped `Retry-After`, a process-local concurrency cap via `p-limit`, a 15-second circuit breaker after five failures, in-flight request deduplication, last-good public JSON fallback, and `[laravel]` latency / status / 429 logs. Calls with `stream:true` do not buffer feed responses. Cart/checkout are private and never replayed; writes have a 15-second timeout to reduce duplicate-order hazards.
+- Added `GET /api/catalog/shop` and `/api/catalog/search` using Laravel's existing `/shop` JSON contract, normalized allowlisted query parameters, `X-Cache: HIT|STALE|MISS`, a 60-second server cache, and public CDN `s-maxage=60, stale-while-revalidate=300`. Cookies and Authorization are never forwarded.
+- Restricted `/api/cart-proxy/[...path]` to actual cart/checkout operations, retained no-store plus guest cookie/token forwarding, forwarded trusted-proxy `X-Forwarded-For` where requests cross the proxy, and made all mutating requests non-retryable.
+- Search suggestions require 3 characters, cancel stale browser requests, debounce by 250ms, and keep a 60-second client cache (up to 100 terms). Shop filtering now requests the public catalog route.
+- Updated server fetches: home, footer, About, product/category slug resolution, shop, both blog surfaces, JSON-generated SEO feeds, Laravel XML/CSV/robots proxy and the developer probe. About is server-rendered.
+- Tagged fetch revalidation: homepage/home data 7200s; footer and About 21600s; product/category, unfiltered shop and blog 3600s; filtered shop/category/blog 60s; public catalog 60s; SEO feeds 3600s. See **critical rollout condition** below.
+- Added build-time `generateStaticParams` seeds for up to 90 popular products/categories and 50 blog posts, tolerating temporarily unavailable Laravel APIs. `GET/POST /api/revalidate` now validates credentials and scope, calls `revalidateTag(tag, 'max')` and `revalidatePath`, clears local fallback snapshots and reports failures instead of claiming no-op success.
+- On checkout, refreshes the Laravel cart immediately before posting the order and checks an exposed `current_stock`/`available_stock` quantity when present. Add-to-cart and checkout writes remain direct, uncached Laravel operations.
+- Added `npm run warm:postdeploy`: warms home, shop, blog, About and top catalog slugs after the site is deployed. New dependency: `p-limit`.
 
-Copy two CSS files from `public/` into `app/_styles/`:
+## Important production boundaries
 
-```bash
-cp public/frontend/v2/css/bootstrap.min.css  src/app/_styles/bootstrap.min.css
-cp public/frontend/v2/css/main.css           src/app/_styles/main.css
-```
+1. **Laravel code was not uploaded.** The webhook endpoint now works in Next.js, but the Laravel product, category, post and menu observers are **not installed** by this ZIP. Configure them (see `LARAVEL_INTEGRATION.md`) **before enabling hour-long TTLs in production**. Without observers, changes can remain stale for 1–6 hours. The public catalog's short TTL is a bounded fallback.
+2. **Stock correctness must be enforced by Laravel** with transaction/row locks in both `/cart/add` and `/checkout`. The browser and this Next proxy cannot atomically guarantee stock when multiple customers order simultaneously. The new checkout GET only checks stock if Laravel includes stock values; it does not replace Laravel validation.
+3. **Hash-only CSP is not production-safe in this Next.js App Router build.** Next's dynamic inline RSC/hydration scripts cannot be statically hashed. The new static CSP uses known GTM hosts and `'unsafe-inline'` to avoid breaking hydration. This preserves functionality but is less restrictive than nonce/hash-only CSP. Do not add `sha256-*` to `script-src` without validating generated hydration scripts on all pages. A strict hash-only CSP was **not** implemented.
+4. `src/app/shop/page.jsx`, `src/app/blog/page.jsx` and `src/app/[slug]/page.jsx` consume `searchParams`, so Next.js may render the HTML dynamically even for unfiltered URLs; **tagged Data Cache/ISR works**, but Full Route Cache static HTML for these pages is not guaranteed. `/`, `/about-us`, and prerendered product/blog slugs without URL filters are the stronger ISR candidates.
+5. Process-local memory caches and circuit state are per Node.js worker. In multi-instance production, use shared durable Next incremental cache and distribute webhook invalidations to every instance. The in-process stale fallback is limited to 250 responses and 1 MiB each (up to 24 hours on upstream error).
+6. Build/runtime verification cannot substitute for staging with live Laravel. Require a successful `npm install`, `npm run build` and full checkout smoke test before promoting this patch.
 
-These were previously loaded globally in `<head>` for every page.
-The new `CartClient.jsx`, `CheckoutClient.jsx`, and
-`OrderSuccessClient.jsx` import them directly, so they only ship in
-those route bundles.
+## Apply patch
 
-`app/_styles/` already contains stub files explaining this — overwrite
-them with the real CSS.
-
----
-
-## 2. Files modified
-
-| File | Change |
-|------|--------|
-| `app/layout.js` | Removed 9 global `<link rel="stylesheet">` tags. Only `globals.css` remains global. |
-| `app/globals.css` | Was empty (0 B). Now contains a tiny reset + the `.btn` / `.btn--base` / `.btn--lg` rules that ProductBox needs. |
-| `app/page.jsx` | `HeroImage` → `next/image` with `priority`, `fetchPriority="high"`, `loading="eager"`, fixed width/height, and `sizes` on the LCP image. Other 3 hero tiles use lazy. Category icons also use `next/image`. |
-| `app/page.module.css` | Added `aspect-ratio` to `.heroLeft`, `.heroRightTop`, `.heroSmall` so the layout box reserves space → no CLS while the image streams in. |
-| `next.config.js` | **New file.** `images.remotePatterns` for `ponnobd.com` + Laravel origin, AVIF/WebP, `deviceSizes`, plus `Cache-Control: public, max-age=31536000, immutable` headers for `/_next/static`, `/frontend`, `/images`, `/fonts`, `/_next/image`. |
-| `components/frontend/Header.jsx` | Cart icon → inline SVG. |
-| `components/frontend/Footer.jsx` | Facebook / YouTube / LinkedIn / Instagram → inline SVG. |
-| `components/frontend/slug/CategoryPage.jsx` | "No products matched" warning icon → inline SVG. |
-| `app/cart/CartClient.jsx` | `+` / `−` icons → inline SVG. Scoped imports of `bootstrap.min.css` + `main.css`. |
-| `app/checkout/CheckoutClient.jsx` | Scoped imports of `bootstrap.min.css` + `main.css`. |
-| `app/order-success/OrderSuccessClient.jsx` | Scoped import of `main.css`. |
-| `app/_styles/` | **New folder.** Stubs for `bootstrap.min.css` + `main.css` + a README. |
-
----
-
-## 3. CSS files removed entirely (not used anywhere in the JSX)
-
-These had **zero references** in any component, so they're gone:
-
-- `slick.css` — no slider
-- `magiczoom.css` — no zoom plugin
-- `splitting.css` — no `<Splitting>`
-- `animate.min.css` — no `animate__*` classes
-- `line-awesome.min.css` — no `la la-*` classes
-- `fontawesome-all.min.css` — replaced by inline SVG
-- `https://cdnjs.cloudflare.com/.../font-awesome` — replaced by inline SVG (also kills one DNS + TLS round-trip on cold load)
-
-If you don't need them, delete them from `public/frontend/v2/css/` too.
-
----
-
-## 4. Expected impact on mobile LCP
-
-The homepage cold-load on mobile previously fetched, render-blocking:
-
-```
-line-awesome.min.css     ~36 KB
-bootstrap.min.css       ~163 KB
-fontawesome-all.min.css  ~80 KB
-slick.css                 ~3 KB
-animate.min.css          ~75 KB
-splitting.css             ~2 KB
-magiczoom.css             ~6 KB
-main.css                  ~?? KB
-+ cdnjs FontAwesome (DNS + TLS to a 3rd-party origin)
-```
-
-After: only `globals.css` (~1 KB) is render-blocking. The hero image gets:
-
-- `<link rel="preload" as="image">` injected automatically by `next/image priority`
-- `fetchpriority="high"` + `loading="eager"`
-- AVIF/WebP via the Next image optimizer
-- An explicit `sizes` so mobile pulls a smaller variant
-- Stable layout box from `aspect-ratio` so the image doesn't push other content around when it lands
-
-Mobile LCP should drop meaningfully — most of the gain comes from
-removing the render-blocking CSS chain, not from the image swap alone.
-
----
-
-## 5. Quick verification
-
-After dropping in the new `src/`:
+From your original project root, take a backup. Overwrite paths from this ZIP and run `sh apply-update.sh` from the project root to delete `next.config.mjs` and `src/middleware.js` (a ZIP overlay cannot delete old files). Do not replace your existing `.env`; the archive intentionally contains no secrets.
 
 ```bash
-# 1. Install (no new deps needed — next/image is already in Next.js)
+sh apply-update.sh
 npm install
-
-# 2. Copy the two CSS files (see step 1 above)
-cp public/frontend/v2/css/bootstrap.min.css  src/app/_styles/bootstrap.min.css
-cp public/frontend/v2/css/main.css           src/app/_styles/main.css
-
-# 3. Build & inspect
 npm run build
-npm start
+npm run start
+# Once the new site is reachable and Laravel webhook observers are installed:
+WARM_SITE_URL=https://thebrainbd.com npm run warm:postdeploy
 ```
 
-Open the homepage, view source, and you should see:
+Required env: `REVALIDATE_SECRET` (same on Laravel); `NEXT_PUBLIC_LARAVEL_APP_URL` (full `/api/v1` base); `LARAVEL_WEB_URL`; `NEXT_PUBLIC_SITE_URL`; optional `LARAVEL_CONCURRENCY=12`, `WARM_URLS=/top-product,/top-category`.
 
-- No `<link rel="stylesheet" href="/frontend/v2/css/...">` in `<head>`
-- An auto-injected `<link rel="preload" as="image" href="/_next/image?url=...">` for the hero
-- The hero `<img>` has `fetchpriority="high"` and `loading="eager"`
-- The cart, checkout, and order-success routes still render correctly with Bootstrap layout intact (because they `import` it directly).
+## Smoke checks prior to traffic switch
 
-If you also ship the API behind a CDN (Cloudflare in front of Laravel), the hero image fetch itself becomes ~one round-trip from the user, which is the real LCP floor on mobile.
+- `GET /` and `GET /about-us`: header/footer/SEO render, no hydration errors, CSP allows GTM and app JS.
+- `GET /api/catalog/shop?sort=low`, filter by brand and pagination: unchanged paginator + facets, public Cache-Control; repeated requests show `X-Cache: HIT`; requests with invalid keys return 400.
+- Search suggestions appear after 3 characters; changing text cancels older suggestions.
+- Category/product/blog pages resolve and structured data is present; no 404 for known slugs.
+- `GET /api/cart-proxy/shop` returns 405. `GET /api/cart-proxy/cart`, `POST /api/cart-proxy/cart/add`, `POST /api/cart-proxy/cart/shipping`, `PATCH /api/cart-proxy/cart/{id}` and `POST /api/cart-proxy/checkout` keep user-specific token/cookies and `Cache-Control: no-store`.
+- Try out-of-stock/insufficient-stock cases in Laravel, and verify a checkout rejection does **not** create an order or decrement inventory. Also test a normal order once.
+- `POST /api/revalidate` with valid secret and `{ "resource":"product", "slug":"sample" }` returns 200 with explicit invalidated tags/paths; invalid secret returns 401. Check next request for updated content.
+- XML, robots and CSV feed URLs remain streaming and parse correctly. Monitor `[laravel]` logs for 429 spikes, fallback `STALE`, upstream latency and circuit-open events.
+
+## Files removed
+
+`next.config.mjs`, `src/middleware.js`. An exact removal list is also supplied in `DELETE_FILES.txt`.

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiRequest, API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/api';
 import styles from './shopPage.module.css';
 import { buildShopQuery, isShopCatalogPayload, parseBrandList, readShopFilters } from './shop-query.mjs';
 
@@ -67,7 +67,6 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
   const [categories, setCategories] = useState(initialData?.categories || []);
   const [pagination, setPagination] = useState(initialPagination(initialData, filters.limit));
   const [loading, setLoading] = useState(initialData === null);
-  const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
   const [message, setMessage] = useState(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
@@ -100,7 +99,7 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
     updateUrl(readShopFilters({ limit: previous.limit, sort: previous.sort }));
   }
 
-  // The server has already fetched this exact URL with cache: no-store. Use
+  // The server has already fetched this exact URL through the shared public catalog cache. Use
   // its result after each navigation instead of keeping the initial SSR data
   // forever or issuing a second identical browser request.
   // Only fall back to the browser proxy if the server fetch failed.
@@ -148,7 +147,12 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
 
     setLoading(true);
     setMessage(null);
-    apiRequest(`/shop?${queryKey}`, { signal: controller.signal })
+    fetch(`/api/catalog/shop?${queryKey}`, { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.message || `HTTP ${response.status}`);
+        return data;
+      })
       .then((result) => {
         if (!controller.signal.aborted) acceptResult(result);
       })
@@ -166,32 +170,6 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
   // Only the URL and matching server response trigger a new data application.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryKey, initialData, initialDataQuery]);
-
-  // async function addToWishlist(productId) {
-  //   setWishlistLoadingId(productId);
-  //   setMessage(null);
-
-  //   try {
-  //     const result = await apiRequest('/wishlist', {
-  //       method: 'POST',
-  //       body: JSON.stringify({
-  //         product_id: productId,
-  //       }),
-  //     });
-
-  //     setMessage({
-  //       type: 'success',
-  //       text: result.message || 'Product added to wishlist!',
-  //     });
-  //   } catch (error) {
-  //     setMessage({
-  //       type: 'error',
-  //       text: error.message || 'Product already exists in wishlist.',
-  //     });
-  //   } finally {
-  //     setWishlistLoadingId(null);
-  //   }
-  // }
 
   useEffect(() => {
     if (!mobileFilterOpen) return undefined;
@@ -626,33 +604,14 @@ export default function ShopView({ initialData = null, initialDataQuery = '' }) 
                               <del>{money(regularPrice)}</del>
                             )}
                           </div>
-{/* 
-                          <p
-                            className={
-                              Number(product.current_stock || 0) > 0
-                                ? styles.inStock
-                                : styles.outStock
-                            }
-                          >
-                            {Number(product.current_stock || 0) > 0
-                              ? 'In Stock'
-                              : 'Out Stock'}
-                          </p> */}
+
 
                           <div className={styles.cardActions}>
                             <a href={productUrl} className={styles.detailsButton}>
                               View Details
                             </a>
 
-                            {/* <button
-                              type="button"
-                              className={styles.wishlistButton}
-                              disabled={wishlistLoadingId === product.id}
-                              onClick={() => addToWishlist(product.id)}
-                              aria-label={`Add ${product.name} to wishlist`}
-                            >
-                              {wishlistLoadingId === product.id ? '...' : '♡'}
-                            </button> */}
+
                           </div>
                         </div>
                       </article>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { laravelFetch } from "@/lib/laravel";
 import { getApiEndpoint, fillEndpointPath } from "@/lib/api-catalog";
 import { resolveLaravelWebOrigin } from "@/lib/backend-feeds";
 
@@ -77,12 +78,12 @@ export async function POST(request) {
   const timer = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const upstream = await fetch(target, {
+    const upstream = await laravelFetch(target, {
       method: "GET",
       headers: { Accept: "application/json, application/xml, text/plain, text/csv;q=0.9, */*;q=0.8" },
       cache: "no-store",
       signal: controller.signal,
-    });
+    }, { public: false, stream: true });
     const contentType = upstream.headers.get("content-type") || "";
     const raw = truncateText(await upstream.text());
     let body = raw;

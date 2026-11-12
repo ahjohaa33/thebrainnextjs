@@ -1,6 +1,8 @@
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { apiUrl, LARAVEL_BASE_URL } from "@/lib/config";
+import { laravelFetch } from "@/lib/laravel";
+import { getHomePageData } from "@/lib/home-data";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import ProductPage from "@/components/frontend/slug/ProductPage";
 import CategoryPage from "@/components/frontend/slug/CategoryPage";
@@ -19,10 +21,38 @@ import {
   getCategoryFaqItems,
 } from "@/lib/schema";
 
-// Cache product/category pages for 5 minutes; on-demand revalidation
-// via revalidateTag("product") or revalidateTag("category") surfaces
-// CMS changes immediately without waiting for the TTL.
-export const revalidate = 300;
+// Cache unfiltered product/category data for one hour; filtered data for one minute.
+// Laravel CMS should call /api/revalidate on product or category changes.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  try {
+    const [shop, home] = await Promise.all([
+      laravelFetch(apiUrl('/shop?limit=48'), {
+        headers: { Accept: 'application/json' },
+        next: { revalidate: 3600, tags: ['shop', 'product'] },
+      }).then((r) => r.ok ? r.json() : null).catch(() => null),
+      getHomePageData().catch(() => null),
+    ]);
+    const slugs = new Set();
+    for (const product of shop?.products?.data || []) {
+      if (typeof product?.slug === 'string' && product.slug) slugs.add(product.slug);
+    }
+    for (const category of shop?.categories || []) {
+      if (typeof category?.slug === 'string' && category.slug) slugs.add(category.slug);
+    }
+    // A home category may expose a /category-link rather than a raw slug.
+    for (const item of home?.categories || []) {
+      const slug = String(item?.link || '').replace(/^\/+|\/+$/g, '');
+      if (slug && !slug.includes('/') && !slug.includes('?') && !slug.includes('#')) slugs.add(slug);
+    }
+    return [...slugs].filter((slug) => /^[a-z0-9][a-z0-9_-]*$/i.test(slug))
+      .slice(0, 90).map((slug) => ({ slug }));
+  } catch (error) {
+    console.warn('[slug] Pre-render seed unavailable:', error?.message);
+    return [];
+  }
+}
 
 function normalizeSearchParams(input) {
   if (!input || typeof input !== "object") return {};
@@ -82,11 +112,10 @@ const getSlugData = cache(async function getSlugData(slug, searchParamsKey = "")
   // retain the existing five-minute cache and revalidation tags.
   const isFiltered = qs !== "";
   try {
-    const res = await fetch(url, {
-      headers: { Accept: "application/json" },
-      ...(isFiltered
-        ? { cache: "no-store" }
-        : { next: { revalidate: 300, tags: ["product", "category", `slug:${slug}`] } }),
+    const res = await laravelFetch(url, {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: isFiltered ? 60 : 3600,
+        tags: ['product', 'category', `slug:${slug.toLowerCase()}`] },
     });
 
     if (res.status === 404) return null;
@@ -100,9 +129,9 @@ const getSlugData = cache(async function getSlugData(slug, searchParamsKey = "")
     if (data.type !== "category" || !globalProductFilters) return data;
 
     const shopQuery = buildCategoryGlobalShopQuery(parsedSearchParams).toString();
-    const shopResponse = await fetch(apiUrl(`/shop?${shopQuery}`), {
-      headers: { Accept: "application/json" },
-      cache: "no-store",
+    const shopResponse = await laravelFetch(apiUrl(`/shop?${shopQuery}`), {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 60, tags: ['shop', 'product', 'category'] },
     });
     if (!shopResponse.ok) return { type: "error", status: shopResponse.status };
 

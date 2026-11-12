@@ -5,14 +5,15 @@
 // ISR config, and without staying in sync by hand.
 
 import { apiUrl } from "@/lib/config";
+import { laravelFetch } from "@/lib/laravel";
 
 export async function getFooterData() {
   try {
-    const res = await fetch(apiUrl("/footer"), {
+    const res = await laravelFetch(apiUrl("/footer"), {
       headers: {
         Accept: "application/json",
       },
-      next: { revalidate: 3600, tags: ["footer"] },
+      next: { revalidate: 21600, tags: ["footer"] },
     });
 
     if (!res.ok) return null;

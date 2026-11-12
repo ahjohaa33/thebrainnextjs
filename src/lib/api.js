@@ -31,6 +31,10 @@ export function getCartToken() {
 export async function apiRequest(path, options = {}) {
   const token = getCartToken();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  // The cart proxy must never be an open proxy to public Laravel resources.
+  if (!/^\/(?:cart(?:\/|$)|checkout(?:\/|$))/.test(normalizedPath)) {
+    throw new Error('Only cart and checkout APIs may use apiRequest. Use /api/catalog for public products.');
+  }
   const url = `${CART_PROXY_BASE_URL}${normalizedPath}`;
 
   const headers = {

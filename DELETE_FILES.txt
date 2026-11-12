@@ -1,0 +1,3 @@
+# Files to delete from the original project when applying the patch
+next.config.mjs
+src/middleware.js

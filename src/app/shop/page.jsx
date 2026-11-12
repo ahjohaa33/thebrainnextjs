@@ -2,11 +2,12 @@ import { Suspense } from "react";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import Shopview from "./Shopview";
 import { apiUrl } from "@/lib/config";
+import { laravelFetch } from "@/lib/laravel";
 import { buildShopQuery, isShopCatalogPayload } from "./shop-query.mjs";
 import { buildMetadata, shouldNoindex } from "@/lib/seo";
 
-// Shop inventory and brand filters must not be served from a five-minute cache.
-export const dynamic = "force-dynamic";
+// Unfiltered shop data uses tagged ISR. Filtered URLs use the separate short TTL.
+export const revalidate = 3600;
 
 export async function generateMetadata({ searchParams }) {
   const filters = (await searchParams) || {};
@@ -20,16 +21,15 @@ export async function generateMetadata({ searchParams }) {
 }
 
 
-// The first Laravel request must reflect the public /shop URL, including
-// selected brands and price/search filters. Every navigation receives fresh
-// server data, and ShopView applies only data for that exact URL.
+// Server data always uses the exact normalized URL and preserves Laravel response shape.
 async function getInitialShopData(searchParams = {}) {
   const params = buildShopQuery(searchParams);
 
   try {
-    const res = await fetch(apiUrl(`/shop?${params.toString()}`), {
+    const filtered = [...params].some(([key, value]) => !(key === 'sort' && value === 'low'));
+    const res = await laravelFetch(apiUrl(`/shop?${params.toString()}`), {
       headers: { Accept: "application/json" },
-      cache: "no-store",
+      next: { revalidate: filtered ? 60 : 3600, tags: ['shop', 'product', 'category'] },
     });
 
     if (!res.ok) return null;

@@ -23,7 +23,7 @@ import { installScrollDepthTracking } from "@/lib/analytics";
  *   NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
  * If not set, both scripts no-op so dev environments don't ship GTM.
  */
-export default function Analytics({ nonce }) {
+export default function Analytics() {
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
   useEffect(() => {
@@ -37,12 +37,12 @@ export default function Analytics({ nonce }) {
   return (
     <>
       {/* dataLayer init — afterInteractive, so it stays off the LCP path. */}
-      <Script id="gtm-datalayer-init" strategy="afterInteractive" nonce={nonce}>
+      <Script id="gtm-datalayer-init" strategy="afterInteractive">
         {`window.dataLayer=window.dataLayer||[];`}
       </Script>
 
       {/* Main GTM loader — afterInteractive keeps it off the LCP path. */}
-      <Script id="gtm-loader" strategy="afterInteractive" nonce={nonce}>
+      <Script id="gtm-loader" strategy="afterInteractive">
         {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;

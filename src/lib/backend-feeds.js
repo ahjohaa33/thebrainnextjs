@@ -19,6 +19,8 @@
 // This avoids Next.js Data Cache's per-entry size limitation while allowing
 // browsers and CDNs to cache the final public response through Cache-Control.
 
+import { laravelFetch } from "@/lib/laravel";
+
 const DEFAULT_LARAVEL_WEB_ORIGIN = "https://backend.thebrainbd.com";
 const FEED_TIMEOUT_MS = 30_000;
 
@@ -296,6 +298,10 @@ function buildUpstreamHeaders(
     }
   }
 
+  // Preserve the client IP chain supplied by the trusted reverse proxy.
+  const forwardedFor = safeHeaderValue(request?.headers?.get('x-forwarded-for'), '', 1024);
+  if (forwardedFor) headers.set('X-Forwarded-For', forwardedFor);
+
   // Do not manually set Accept-Encoding. Node/undici negotiates and
   // decompresses the upstream response safely.
   //
@@ -319,7 +325,7 @@ async function requestUpstream({
   }, FEED_TIMEOUT_MS);
 
   try {
-    return await fetch(upstreamUrl, {
+    return await laravelFetch(upstreamUrl, {
       method: "GET",
       signal: controller.signal,
 
@@ -330,12 +336,9 @@ async function requestUpstream({
       redirect: "follow",
 
       headers: buildUpstreamHeaders(
-        request,
-        backendOrigin,
-        contentType,
-        retry
+        request, backendOrigin, contentType, retry
       ),
-    });
+    }, { public: false, stream: true });
   } finally {
     clearTimeout(timer);
   }

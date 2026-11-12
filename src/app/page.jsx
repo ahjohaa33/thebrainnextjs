@@ -12,7 +12,9 @@ import {
   buildItemListSchema,
 } from "@/lib/schema";
 
-// Home page data is cached by getHomePageData() for 10 minutes.
+// Homepage ISR; Laravel data is tagged and cached for two hours.
+export const revalidate = 7200;
+
 export async function generateMetadata() {
   return generateHomeMetadata();
 }

@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
 import { LARAVEL_BASE_URL } from "@/lib/config";
 
@@ -60,10 +59,7 @@ export const viewport = {
   themeColor: "#111827",
 };
 
-export default async function RootLayout({ children }) {
-  // Per-request CSP nonce set by middleware.js; passed to GTM <Script> tags so
-  // they remain allowed under the production Content-Security-Policy.
-  const nonce = (await headers()).get("x-nonce") || undefined;
+export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
@@ -114,7 +110,7 @@ export default async function RootLayout({ children }) {
           interactive content first; next/script's afterInteractive
           strategy then loads gtm.js without blocking LCP.
         */}
-        <Analytics nonce={nonce} />
+        <Analytics />
         {/*
           Global click/submit listener for tel:, WhatsApp, and newsletter
           form events. Single delegated listener — keeps the Footer pure

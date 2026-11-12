@@ -10,6 +10,8 @@
 //
 // Footer edits in the CMS show up on the very next request.
 
+import { laravelFetch } from "@/lib/laravel";
+
 const RAW_LARAVEL_BASE_URL =
   process.env.NEXT_PUBLIC_LARAVEL_APP_URL ||
   process.env.LARAVEL_APP_URL ||
@@ -20,11 +22,15 @@ const LARAVEL_API_URL = RAW_LARAVEL_BASE_URL.replace(/\/+$/, "");
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const res = await fetch(`${LARAVEL_API_URL}/footer`, {
-      headers: { Accept: "application/json" },
-      cache: "no-store",
+    const res = await laravelFetch(`${LARAVEL_API_URL}/footer`, {
+      headers: {
+        Accept: 'application/json',
+        ...(request.headers.get('x-forwarded-for') ?
+          { 'X-Forwarded-For': request.headers.get('x-forwarded-for') } : {}),
+      },
+      next: { revalidate: 21600, tags: ["footer"] },
     });
 
     if (!res.ok) {

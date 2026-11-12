@@ -1,19 +1,23 @@
-# Ponnobd Next.js API Trace
+# The Brain BD Next.js API Trace — 2026-11-12
 
-This trace was produced from the supplied Next.js source. The added API panel is diagnostic only and does **not** replace or reroute existing storefront requests.
+This trace reflects the supplied Next.js application **after the public catalog / transport migration**. The developer API panel remains diagnostic only. All existing Laravel JSON response shapes are retained. The Laravel backend itself was not supplied or modified.
+
+**Server transport:** all Laravel fetches in server components, route handlers, JSON SEO feeds and public XML/CSV/robots feeds now use `src/lib/laravel.js` (four-second public GET timeout per attempt; two GET retries; `p-limit`; circuit breaker; deduplicated GETs; public last-good fallback; 429/latency/`X-Cache` logs). Private cart/checkout GET/POST requests bypass shared caching, with non-retryable writes and 15-second mutation timeout. Asset image requests are browser-native and are not proxied through this transport.
+
+**Caching:** tagged Next fetch caches use `home=7200s`, `footer=21600s`, `about=21600s`, unfiltered `shop/category/product/blog=3600s`, filtered listing=60s, JSON SEO feeds=3600s, public catalog route memory/Next cache=60s and CDN `s-maxage=60, stale-while-revalidate=300`. Laravel must call `/api/revalidate` on changes before long TTLs are safe. See `CHANGES.md` for the App Router search-param / Full Route Cache limitation.
 
 ## Runtime request graph
 
 - **Homepage / shared header** → `GET {NEXT_PUBLIC_LARAVEL_APP_URL}/home`
 - **Footer / contact showroom data** → `GET .../footer` (server-direct) and browser `GET /api/footer` → Laravel `/footer`
-- **About page** → browser `GET /api/about` → Laravel `/about`
-- **Shop initial render** → server `GET .../shop?page=1&limit=12&sort=low`
-- **Shop filter/pagination refresh** → browser `GET /api/cart-proxy/shop?...` → Laravel `/shop?...`
+- **About page** → server `GET .../about` with `about` tag; legacy browser `GET /api/about` still works
+- **Shop initial render** → server `GET .../shop?sort=low` (defaults remain Laravel-defined; tagged cache)
+- **Shop filter/pagination refresh** → browser `GET /api/catalog/shop?...` → Laravel `/shop?...` (no cookies)
 - **Product/category catch-all** → server `GET .../product-or-category/{slug}` plus forwarded search params
 - **Blog list** → server `GET .../blog?search=&category=&page=`
 - **Blog detail** → server `GET .../blog/{slug}`; may also fetch `/blog` for sidebar categories
 - **Cart** → all browser calls go through `/api/cart-proxy/*`, forwarding `X-Cart-Token`, cookies and optional Authorization to Laravel
-- **Checkout** → `POST .../checkout`; frontend sends customer/shipping/payment fields only and expects Laravel to use the persisted cart
+- **Checkout** → live `GET .../cart` preflight then `POST .../checkout` (non-retryable); frontend sends customer/shipping/payment fields only and expects Laravel to use the persisted cart; transactional stock checking must be done in Laravel
 - **SEO feeds** → Next public routes proxy the Laravel **web origin** (not `/api/v1`) for sitemap XML, robots.txt and catalog CSV
 
 ## Laravel API endpoints required
@@ -34,9 +38,8 @@ This trace was produced from the supplied Next.js source. The added API panel is
 | DELETE | `/cart/clear` | Empty cart | — | updated cart envelope |
 | POST | `/cart/shipping` | Shipping method | `{shipping_type}` | message optional; cart is re-fetched |
 | POST | `/checkout` | Place order | `{name,address,phone,notes?,payment_type:'cash_on_delivery',shipping_type}` | order number/details in one of the tolerated wrappers |
-| POST | `/wishlist` | Wishlist add | `{product_id}` | `message` | 
 
-`/wishlist` is wired in JavaScript but its current Shop UI button is commented out.
+The old commented-out wishlist handler and button markup were removed from the Shop view; the active shop UI is unchanged.
 
 ## Guest cart identity
 
@@ -98,7 +101,11 @@ These are fetched from `LARAVEL_WEB_URL` (for example `https://backend.example.c
 
 - The contact form is presentation-only; it currently sends **no API request**.
 - `src/lib/youtube.js` contains YouTube Data API fallback logic, but no current import/call site was found. Homepage video data comes from `/home.video_sections`.
-- `/api/revalidate` is retained as a compatibility endpoint and is intentionally not exposed/tested by the visual API panel.
+- `/api/revalidate` executes real `revalidateTag(tag, 'max')` plus `revalidatePath` and accepts explicit `{tags,paths}` or event `{resource:'product|category|blog|menu|site|about|footer',slug,old_slug}`. It accepts a secret header and retains legacy secret query param/GET compatibility for `/system/clear-cache`.
+- `/api/catalog/[...path]` accepts **only** `shop` or `search`, the same Laravel `/shop` paginator response, and normalized allowlisted query parameters (`page,limit,sort,availability,brand,minPrice,maxPrice,query,category_id` plus historical aliases such as `brands[]`, `q`, `status`). It forwards the trusted reverse-proxy `X-Forwarded-For`, not cookies or auth.
+- `/api/cart-proxy/[...path]` now accepts only `GET /cart`, `POST /cart/add`, `POST /cart/shipping`, `PATCH|PUT|DELETE /cart/{id}`, `DELETE /cart/clear`, `POST /checkout`. It forwards guest token, cookies, Authorization and `X-Forwarded-For`; response `Cache-Control: no-store`.
+- Public routes may respond with `X-Cache: HIT|MISS|STALE` describing the in-process Laravel fetch cache; a CDN may have its own separate hit/miss headers. 429 request-attempt events and upstream latency are logged as JSON in the Next.js process. Client suggestions also cache 60s, abort stale requests and require three characters.
+- Laravel product/category/blog/menu observers were **not** present in this uploaded archive. Read `LARAVEL_INTEGRATION.md` before deploying with hour-long TTLs.
 
 ## Developer API panel
 

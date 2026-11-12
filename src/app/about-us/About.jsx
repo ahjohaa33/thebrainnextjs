@@ -1,9 +1,7 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
+import { apiUrl } from "@/lib/config";
+import { laravelFetch } from "@/lib/laravel";
 import "./aboutPage.css";
 
-const ABOUT_API = "/api/about";
 
 const FALLBACK_IMAGE = "https://backend.thebrainbd.com/frontend/assets/IMG_5864.JPG";
 const BACKEND_BASE_URL = "https://backend.thebrainbd.com";
@@ -97,61 +95,22 @@ function normalizeAboutResponse(json) {
   return json?.data || json?.about || json || {};
 }
 
-export default function About() {
-  const [about, setAbout] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+export default async function About() {
+  let about = {};
+  let errorMessage = '';
+  try {
+    const response = await laravelFetch(apiUrl('/about'), {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 21600, tags: ['about'] },
+    });
+    if (!response.ok) throw new Error(`About API HTTP ${response.status}`);
+    about = normalizeAboutResponse(await response.json());
+  } catch (error) {
+    console.error('[about-us]', error?.message || error);
+    errorMessage = 'Failed to load about page content.';
+  }
 
-  useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-
-    async function loadAbout() {
-      try {
-        const response = await fetch(ABOUT_API, {
-          signal: controller.signal,
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`About API failed with status ${response.status}`);
-        }
-
-        const json = await response.json();
-        const data = normalizeAboutResponse(json);
-
-        if (active) {
-          setAbout(data);
-          setErrorMessage("");
-        }
-      } catch (error) {
-        if (error.name === "AbortError") return;
-
-        console.error("Failed to load about page:", error);
-
-        if (active) {
-          setAbout({});
-          setErrorMessage("Failed to load about page content.");
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadAbout();
-
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, []);
-
-  const content = useMemo(() => {
+  const content = (() => {
     const rawDescription = cleanText(about?.ceo_description || "");
     const withoutSignature = removeSignaturePart(rawDescription);
 
@@ -218,15 +177,7 @@ export default function About() {
           about?.ceo_image
       ),
     };
-  }, [about]);
-
-  if (loading) {
-    return (
-      <main className="about-loading">
-        <p>Loading about page...</p>
-      </main>
-    );
-  }
+  })();
 
   return (
     <>

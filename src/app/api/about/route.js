@@ -1,3 +1,5 @@
+import { laravelFetch } from "@/lib/laravel";
+
 const RAW_LARAVEL_BASE_URL =
   process.env.NEXT_PUBLIC_LARAVEL_APP_URL ||
   process.env.LARAVEL_APP_URL ||
@@ -8,13 +10,15 @@ const LARAVEL_API_URL = RAW_LARAVEL_BASE_URL.replace(/\/+$/, "");
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const res = await fetch(`${LARAVEL_API_URL}/about`, {
+    const res = await laravelFetch(`${LARAVEL_API_URL}/about`, {
       headers: {
         Accept: "application/json",
+        ...(request.headers.get('x-forwarded-for') ?
+          { 'X-Forwarded-For': request.headers.get('x-forwarded-for') } : {}),
       },
-      cache: "no-store",
+      next: { revalidate: 21600, tags: ["about"] },
     });
 
     if (!res.ok) {

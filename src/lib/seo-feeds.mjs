@@ -3,6 +3,8 @@
  * storefront, not from optional Laravel XML/CSV exports.
  * Pure ESM so response/render logic can be regression-tested without Next.js.
  */
+import { laravelFetch } from './laravel.js';
+
 export const PRODUCT_PAGE_SIZE = 100;
 export const PRODUCTS_PER_SITEMAP = 10_000; // safely below Google's 50k URL limit
 const MAX_PRODUCT_PAGES = 2500;
@@ -90,10 +92,10 @@ async function getJson(path) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const response = await fetch(`${apiBase()}${path}`, {
+    const response = await laravelFetch(`${apiBase()}${path}`, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
-      next: { revalidate: 900, tags: ['seo-feeds'] },
+      next: { revalidate: 3600, tags: ['seo-feeds', 'shop', 'blog'] },
     });
     if (!response.ok) throw Error(`Laravel ${path.split('?')[0]} returned HTTP ${response.status}`);
     const json = await response.json();

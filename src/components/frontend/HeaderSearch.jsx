@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiRequest, API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 import styles from "./Header.module.css";
 
 const ASSET_BASE_URL = API_BASE_URL.replace(/\/api\/v\d+$/i, "").replace(/\/api$/i, "");
-const MIN_QUERY_LENGTH = 2;
+const MIN_QUERY_LENGTH = 3;
+const SUGGESTION_CACHE_MS = 60_000;
+const suggestionCache = new Map();
 const SUGGESTION_LIMIT = 6;
 
 function productHref(product = {}) {
@@ -140,6 +142,7 @@ export default function HeaderSearch({ searchAction = "/shop" }) {
   const router = useRouter();
   const rootRef = useRef(null);
   const requestSequence = useRef(0);
+  const activeRequest = useRef(null);
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -174,39 +177,48 @@ export default function HeaderSearch({ searchAction = "/shop" }) {
 
   useEffect(() => {
     const term = query.trim();
+    const key = term.toLocaleLowerCase();
+    const requestId = ++requestSequence.current;
+    activeRequest.current?.abort();
+    activeRequest.current = null;
 
     if (term.length < MIN_QUERY_LENGTH) {
-      requestSequence.current += 1;
       setSuggestions([]);
       setLoading(false);
       return;
     }
-
+    const saved = suggestionCache.get(key);
+    if (saved && Date.now() - saved.time < SUGGESTION_CACHE_MS) {
+      setSuggestions(saved.items);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const controller = new AbortController();
+    activeRequest.current = controller;
     const timer = window.setTimeout(async () => {
-      const requestId = ++requestSequence.current;
-      setLoading(true);
-
       try {
         const params = new URLSearchParams({
-          query: term,
-          limit: String(SUGGESTION_LIMIT),
-          page: "1",
-          sort: "popularity",
+          query: term, limit: String(SUGGESTION_LIMIT), page: '1', sort: 'popularity',
         });
-
-        const result = await apiRequest(`/shop?${params.toString()}`);
-        if (requestId !== requestSequence.current) return;
-
-        setSuggestions(Array.isArray(result?.products?.data) ? result.products.data : []);
-      } catch {
-        if (requestId !== requestSequence.current) return;
-        setSuggestions([]);
+        const response = await fetch(`/api/catalog/search?${params}`, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Search HTTP ${response.status}`);
+        const result = await response.json();
+        if (controller.signal.aborted || requestId !== requestSequence.current) return;
+        const items = Array.isArray(result?.products?.data) ? result.products.data : [];
+        suggestionCache.set(key, { time: Date.now(), items });
+        if (suggestionCache.size > 100) suggestionCache.delete(suggestionCache.keys().next().value);
+        setSuggestions(items);
+      } catch (error) {
+        if (!controller.signal.aborted && requestId === requestSequence.current) setSuggestions([]);
       } finally {
         if (requestId === requestSequence.current) setLoading(false);
       }
     }, 250);
-
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [query]);
 
   function submitSearch(event) {

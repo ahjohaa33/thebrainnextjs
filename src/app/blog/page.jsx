@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { API_BASE_URL } from "@/lib/api";
+import { apiUrl } from "@/lib/config";
+import { laravelFetch } from "@/lib/laravel";
 import { buildMetadata, shouldNoindex } from "@/lib/seo";
 import styles from "./blogPage.module.css";
 
@@ -8,9 +9,8 @@ import SiteHeader from "@/components/frontend/SiteHeader";
 import JsonLd from "@/components/seo/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/schema";
 
-// Always fetch fresh from the API; never cache.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Tagged ISR for the unfiltered blog; filtered searches use shorter data TTL.
+export const revalidate = 3600;
 
 async function getBlogData({ search = "", category = "", page = "1" }) {
   const params = new URLSearchParams();
@@ -20,14 +20,14 @@ async function getBlogData({ search = "", category = "", page = "1" }) {
   if (page) params.set("page", page);
 
   const queryString = params.toString();
-  const url = `${API_BASE_URL}/blog${queryString ? `?${queryString}` : ""}`;
+  const url = apiUrl(`/blog${queryString ? `?${queryString}` : ""}`);
 
-  const response = await fetch(url, {
+  const response = await laravelFetch(url, {
     method: "GET",
     headers: {
       Accept: "application/json",
     },
-    cache: "no-store",
+    next: { revalidate: search || category || Number(page) > 1 ? 60 : 3600, tags: ["blog"] },
   });
 
   if (!response.ok) {

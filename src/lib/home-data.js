@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { laravelFetch } from "@/lib/laravel";
 import { absoluteUrl, apiUrl } from "@/lib/config";
 import { buildMetadata, stripMeta } from "@/lib/seo";
 
@@ -207,8 +208,8 @@ function deriveAltFromLink(link, siteName, index) {
  * Fetch the home payload from the Laravel API.
  *
  * Caching policy:
- *   - next: { revalidate: 600, tags: ["home", "site-header"] }
- *     → Next.js Data Cache stores the response for up to 10 minutes.
+ *   - next: { revalidate: 7200, tags: ["home", "site-header"] }
+ *     → Next.js Data Cache stores the response for up to two hours.
  *     On-demand revalidation via revalidateTag("home") or
  *     revalidateTag("site-header") from /api/revalidate lets CMS
  *     updates surface immediately without waiting for the TTL.
@@ -220,9 +221,9 @@ function deriveAltFromLink(link, siteName, index) {
  */
 export const getHomePageData = cache(async function getHomePageData() {
   try {
-    const response = await fetch(apiUrl("/home"), {
+    const response = await laravelFetch(apiUrl("/home"), {
       headers: { Accept: "application/json" },
-      next: { revalidate: 600, tags: ["home", "site-header"] },
+      next: { revalidate: 7200, tags: ["home", "site", "site-header", "header-menu"] },
     });
 
     if (!response.ok) {

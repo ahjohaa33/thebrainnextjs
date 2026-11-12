@@ -14,7 +14,7 @@ const KNOWN_CACHE_PREFIXES = ["swr_cache:"];
 // Tags used across the app's ISR fetches (see home-data.js, [slug]/page.jsx,
 // Footer.jsx) — revalidating these forces the next request to hit Laravel
 // fresh instead of serving the cached Data Cache entry.
-const REVALIDATE_TAGS = ["home", "site-header", "footer", "product", "category"];
+const REVALIDATE_TAGS = ["home", "site", "site-header", "header-menu", "footer", "about", "product", "category", "shop", "blog", "seo-feeds"];
 
 function useLog() {
   const [lines, setLines] = useState([]);

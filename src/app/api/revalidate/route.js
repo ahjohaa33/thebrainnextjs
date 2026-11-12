@@ -1,111 +1,100 @@
-// app/api/revalidate/route.js
-//
-// Cache revalidation webhook.
-//
-// NOTE: with the new no-cache setup, every page fetch uses
-// `cache: "no-store"` and `export const dynamic = "force-dynamic"`. So
-// there is nothing in the Next.js Data Cache to invalidate — fresh
-// data is loaded on every request automatically.
-//
-// This endpoint is retained for backward compatibility: if your
-// Laravel CMS still POSTs here on content changes, it will succeed
-// (200 OK) without doing anything destructive. You can remove the
-// webhook from the CMS at your leisure.
-//
-// Auth: requires REVALIDATE_SECRET env var (header `x-revalidate-secret`
-// or `?secret=` query string).
+import { timingSafeEqual } from 'node:crypto';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { invalidateLaravelCache } from '@/lib/laravel';
 
-import { revalidatePath, revalidateTag } from "next/cache";
+export const dynamic = 'force-dynamic';
+const SECRET = process.env.REVALIDATE_SECRET || '';
+const NO_STORE = { 'Cache-Control': 'no-store' };
 
-const SECRET = process.env.REVALIDATE_SECRET || "";
-
-function unauthorized(message = "Unauthorized") {
-  return Response.json({ ok: false, error: message }, { status: 401 });
+function authorized(secret) {
+  if (!SECRET || !secret) return false;
+  const a = Buffer.from(secret);
+  const b = Buffer.from(SECRET);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+function entries(value) {
+  return (Array.isArray(value) ? value : value ? [value] : []).map(String);
+}
+function validTag(value) {
+  return value.length <= 256 && /^[a-z0-9:_-]+$/i.test(value);
+}
+function validPath(value) {
+  return value.length <= 400 && value.startsWith('/') && !value.startsWith('//') &&
+    !value.includes('?') && !value.includes('#') && !value.includes('..') &&
+    !/[^\x20-\x7e]/.test(value);
 }
 
-function getSecretFromRequest(request, urlObject) {
-  return (
-    request.headers.get("x-revalidate-secret") ||
-    urlObject.searchParams.get("secret") ||
-    ""
-  );
-}
-
-function toArray(value) {
-  if (value == null || value === "") return [];
-  return Array.isArray(value) ? value : [value];
+function eventTargets(body) {
+  const tags = [];
+  const paths = [];
+  const resource = String(body.resource || body.type || '').toLowerCase();
+  const slugs = [...entries(body.slug), ...entries(body.old_slug), ...entries(body.oldSlug)]
+    .map((slug) => slug.trim().toLowerCase()).filter((slug) => /^[a-z0-9_-]{1,180}$/.test(slug));
+  const slugTag = (prefix) => slugs.forEach((slug) => {
+    tags.push(`${prefix}:${slug}`);
+    paths.push(`${prefix === 'blog' ? '/blog/' : '/'}${slug}`);
+  });
+  switch (resource) {
+    case 'product':
+    case 'category':
+      tags.push('product', 'category', 'shop', 'home', 'seo-feeds');
+      slugTag('slug');
+      paths.push('/', '/shop');
+      break;
+    case 'blog':
+      tags.push('blog', 'seo-feeds');
+      slugTag('blog');
+      paths.push('/blog');
+      break;
+    case 'menu':
+    case 'site':
+      tags.push('home', 'site', 'site-header', 'header-menu', 'footer');
+      paths.push('/');
+      break;
+    case 'about':
+      tags.push('about'); paths.push('/about-us');
+      break;
+    case 'footer':
+      tags.push('footer');
+      break;
+  }
+  return { tags, paths };
 }
 
 async function handle(request) {
-  if (!SECRET) {
-    return unauthorized("REVALIDATE_SECRET is not configured on the server.");
-  }
-
   const url = new URL(request.url);
-  const provided = getSecretFromRequest(request, url);
-
-  if (provided !== SECRET) {
-    return unauthorized();
+  const provided = request.headers.get('x-revalidate-secret') || url.searchParams.get('secret') || '';
+  if (!authorized(provided)) {
+    return Response.json({ ok: false, error: 'Unauthorized or missing revalidation secret.' },
+      { status: 401, headers: NO_STORE });
   }
-
   let body = {};
-  if (request.method === "POST") {
-    try {
-      body = await request.json();
-    } catch {
-      body = {};
-    }
+  if (request.method === 'POST') {
+    try { body = await request.json() || {}; }
+    catch { return Response.json({ ok: false, error: 'Invalid JSON.' }, { status: 400, headers: NO_STORE }); }
   }
-
-  const tags = [
-    ...url.searchParams.getAll("tag"),
-    ...toArray(body?.tag),
-    ...toArray(body?.tags),
-  ].filter(Boolean);
-
-  const paths = [
-    ...url.searchParams.getAll("path"),
-    ...toArray(body?.path),
-    ...toArray(body?.paths),
-  ].filter(Boolean);
-
-  // Even though our fetches are no-store, calling these is safe and
-  // a no-op for non-existent cache entries. We do the work so CMS
-  // webhooks continue to look successful.
-  for (const tag of tags) {
-    try {
-      revalidateTag(String(tag));
-    } catch {
-      /* no-op */
-    }
+  const event = eventTargets(body);
+  const tags = [...new Set([...url.searchParams.getAll('tag'), ...entries(body.tag), ...entries(body.tags), ...event.tags])];
+  const paths = [...new Set([...url.searchParams.getAll('path'), ...entries(body.path), ...entries(body.paths), ...event.paths])];
+  if (tags.length + paths.length > 100 || tags.some((tag) => !validTag(tag)) || paths.some((path) => !validPath(path))) {
+    return Response.json({ ok: false, error: 'Invalid revalidation scope.' }, { status: 400, headers: NO_STORE });
   }
-
-  for (const path of paths) {
-    try {
-      revalidatePath(String(path));
-    } catch {
-      /* no-op */
-    }
+  if (!tags.length && !paths.length) {
+    return Response.json({ ok: false, error: 'No tags, paths, or recognized resource.' }, { status: 400, headers: NO_STORE });
   }
-
-  return Response.json(
-    {
-      ok: true,
-      revalidated: { tags, paths },
-      note:
-        "App runs in no-cache mode; this endpoint is a no-op kept for backward compatibility.",
-      now: Date.now(),
-    },
-    { status: 200 }
-  );
+  try {
+    for (const tag of tags) revalidateTag(tag, 'max');
+    for (const path of paths) revalidatePath(path);
+    // Process-local stale snapshots are also cleared on the instance receiving this hook.
+    invalidateLaravelCache(tags, paths);
+    console.info('[revalidate]', JSON.stringify({ tags, paths }));
+    return Response.json({ ok: true, revalidated: { tags, paths } }, { headers: NO_STORE });
+  } catch (error) {
+    console.error('[revalidate] failed:', error);
+    return Response.json({ ok: false, error: 'Revalidation failed.' }, { status: 500, headers: NO_STORE });
+  }
 }
 
-export async function POST(request) {
-  return handle(request);
-}
-
-export async function GET(request) {
-  return handle(request);
-}
-
-export const dynamic = "force-dynamic";
+export async function POST(request) { return handle(request); }
+// Kept for the existing /system/clear-cache page and older CMS integrations.
+export async function GET(request) { return handle(request); }
