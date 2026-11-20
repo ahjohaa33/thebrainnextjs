@@ -9,6 +9,7 @@ import ThemeSwatcher from "@/components/frontend/ThemeSwatcher";
 import PwaInstaller from "@/components/frontend/PwaInstaller";
 import Analytics, { GtmNoscript } from "@/components/Analytics";
 import EngagementTracker from "@/components/EngagementTracker";
+import DisableInspection from "@/components/frontend/DisableInspection";
 import JsonLd from "@/components/seo/JsonLd";
 import { buildMetadata, SITE_NAME } from "@/lib/seo";
 import {
@@ -85,6 +86,7 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {/* GTM noscript iframe must be the first thing inside <body>. */}
         <GtmNoscript />
+        <DisableInspection />
 
         <Providers>{children}</Providers>
         <Footer />
